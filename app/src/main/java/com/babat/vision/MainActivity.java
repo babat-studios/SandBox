@@ -82,7 +82,7 @@ public class MainActivity extends Activity implements CvCameraViewListener2 {
 
     public void onCameraViewStarted(int width, int height)
     {
-        mOpenCvCameraView.testMethod();
+        mOpenCvCameraView.setUpCamera();
         sceneDetector = SceneDetector.getInstance(this);
     }
 
