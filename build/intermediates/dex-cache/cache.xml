@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="utf-8"?>
+<items version="2" >
+
+    <item
+        jar="/ssd/projects/temp_babat/app/build/intermediates/exploded-aar/com.android.support/support-v4/22.1.1/jars/libs/internal_impl-22.1.1.jar"
+        jumboMode="false"
+        revision="22.0.1"
+        sha1="9e070ad32b2700b0343e8e0cccc437733d91ba3a">
+        <dex dex="/ssd/projects/temp_babat/app/build/intermediates/pre-dexed/debug/internal_impl-22.1.1-c7b00c8d259e0b2d901a764f4a1a4d01697efb2b.jar" />
+    </item>
+    <item
+        jar="/ssd/projects/temp_babat/app/build/intermediates/exploded-aar/temp_babat/openCVLibrary2410/unspecified/jars/classes.jar"
+        jumboMode="false"
+        revision="22.0.1"
+        sha1="9bf58c7c1654ab17493bedc232bfcaf12153b126">
+        <dex dex="/ssd/projects/temp_babat/app/build/intermediates/pre-dexed/debug/classes-7c9ea03468be18bb252fc667f175f15876b9d0eb.jar" />
+    </item>
+    <item
+        jar="/ssd/projects/temp_babat/app/build/intermediates/exploded-aar/com.android.support/appcompat-v7/22.1.1/jars/classes.jar"
+        jumboMode="false"
+        revision="22.0.1"
+        sha1="a3ff3c506644c820eb2bdf06e8339f72be578551">
+        <dex dex="/ssd/projects/temp_babat/app/build/intermediates/pre-dexed/debug/classes-15abf6b230f7f484dc55969c8bd278e76e26ca6e.jar" />
+    </item>
+    <item
+        jar="/ssd/projects/temp_babat/app/build/intermediates/exploded-aar/com.android.support/support-v4/22.1.1/jars/classes.jar"
+        jumboMode="false"
+        revision="22.0.1"
+        sha1="c95ba8152923e4872e86a82cfcba9a51c0214328">
+        <dex dex="/ssd/projects/temp_babat/app/build/intermediates/pre-dexed/debug/classes-1cc13750c2f6948c005f18a6fea4609106af33bf.jar" />
+    </item>
+    <item
+        jar="/ssd/sdk/android/extras/android/m2repository/com/android/support/support-annotations/22.1.1/support-annotations-22.1.1.jar"
+        jumboMode="false"
+        revision="22.0.1"
+        sha1="01d051a6bfb1218b1db2d3a5af0480ac2c25c42a">
+        <dex dex="/ssd/projects/temp_babat/app/build/intermediates/pre-dexed/debug/support-annotations-22.1.1-50a452d5187bc51e1b2e50d9b7359d867911a296.jar" />
+    </item>
+
+</items>
