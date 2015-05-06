@@ -20,6 +20,7 @@ public class MainActivity extends Activity {
 
     private MainGLSurfaceView mGraphicsView;
     private CameraView mCameraView;
+
     private SceneDetector sceneDetector;
 
 

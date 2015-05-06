@@ -5,6 +5,7 @@ import org.opencv.calib3d.Calib3d;
 import org.opencv.core.CvType;
 import org.opencv.core.Mat;
 import org.opencv.core.MatOfDMatch;
+import org.opencv.core.MatOfDouble;
 import org.opencv.core.MatOfKeyPoint;
 import org.opencv.core.MatOfPoint3f;
 import org.opencv.core.MatOfPoint2f;
@@ -95,10 +96,25 @@ public class SceneDetector implements CameraView.CameraViewListener {
     {
         Log.d(TAG, "Calibrating camera");
 
-        detected = true;
 
+        //Input image size
         Size imgSize = img.size();
+        //Zero distortion coefs
+        MatOfDouble distCoefs = new MatOfDouble();
+        //Nexus 5 camera view matrix
+        Mat cameraMatrix = new Mat(3,3,5);
+        cameraMatrix.put(0,0,1697);
+        cameraMatrix.put(0,1,0);
+        cameraMatrix.put(0,2,960);
+        cameraMatrix.put(1,0,0);
+        cameraMatrix.put(1,1,1697);
+        cameraMatrix.put(1,2,540);
+        cameraMatrix.put(2,0,0);
+        cameraMatrix.put(2,1,0);
+        cameraMatrix.put(2, 2, 1);
 
+
+        //Corner recognition
         List<Double> xs = new ArrayList<Double>();
         List<Double> ys = new ArrayList<Double>();
         for (Point pnt : crosses) {
@@ -130,84 +146,55 @@ public class SceneDetector implements CameraView.CameraViewListener {
 //                imagePointView.get(2,0)[0] - ( imagePointView.get(1,0)[0] - imagePointView.get(0,0)[0]));
 //        imagePointView.put(3,1,
 //                imagePointView.get(2,1)[0] - ( imagePointView.get(1,1)[0] - imagePointView.get(0,1)[0]));
+
         MatOfPoint3f objectPointView = new MatOfPoint3f();
         objectPointView.fromList(objectPnts);
         MatOfPoint2f imagePointView = new MatOfPoint2f();
         imagePointView.fromList(imagePnts);
 
 
-
-
-        List<MatOfPoint3f> objectPoints = new ArrayList<MatOfPoint3f>();
-        objectPoints.add(objectPointView);
-        List<MatOfPoint2f> imagePoints = new ArrayList<MatOfPoint2f>();
-        imagePoints.add(imagePointView);
-
-        Mat cameraMatrix = new Mat(3,3,5); //Calib3d.initCameraMatrix2D(objectPoints, imagePoints, imgSize);
-        cameraMatrix.put(0,0,1697);
-        cameraMatrix.put(0,1,0);
-        cameraMatrix.put(0,2,960);
-        cameraMatrix.put(1,0,0);
-        cameraMatrix.put(1,1,1697);
-        cameraMatrix.put(1,2,540);
-        cameraMatrix.put(2,0,0);
-        cameraMatrix.put(2,1,0);
-        cameraMatrix.put(2,2,1);
-
-        for (int rIdx = 0; rIdx < cameraMatrix.rows(); rIdx++) {
-            for (int cIdx = 0; cIdx < cameraMatrix.cols(); cIdx++) {
-                double[] val = cameraMatrix.get(rIdx, cIdx);
-                Log.d(TAG, String.format("Camera matrix %f at %d %d", val[0], rIdx, cIdx ));
-            }
+        //Debug
+        for (int tIdx = 0; tIdx < 4; tIdx++) {
+            Log.d(TAG,  String.format("Corner %d :: [%f %f] => [%f %f]", tIdx,
+                    objectPointView.get(tIdx,0)[0],
+                    objectPointView.get(tIdx,0)[1],
+                    imagePointView.get(tIdx,0)[0],
+                    imagePointView.get(tIdx,0)[1]));
         }
 
 
-        Mat distCoefs = new Mat();
-        List<Mat> rvecs = new ArrayList<Mat>();
-        List<Mat> tvecs = new ArrayList<Mat>();
-
-        Mat obj1 = new Mat();
-        Mat img1 = new Mat();
-
-        objectPointView.convertTo(obj1, 5);
-        imagePointView.convertTo(img1, 5);
-
-        //        //DEBUG
-//        for (int tIdx = 0; tIdx < 4; tIdx++) {
-//            Log.d(TAG,  String.format("test_a %d :: %f %f", tIdx, obj1.get(tIdx,0)[0], obj1.get(tIdx,1)[0]) );
-//            Log.d(TAG,  String.format("test_b %d :: %f %f", tIdx, img1.get(tIdx,0)[0], img1.get(tIdx,1)[0]) );
-//        }
-
-        List<Mat> obj1List = new ArrayList<Mat>();
-        obj1List.add(obj1);
-        List<Mat> img1List = new ArrayList<Mat>();
-        img1List.add(img1);
-
-
-        Calib3d.calibrateCamera(obj1List, img1List, imgSize, cameraMatrix, distCoefs, rvecs, tvecs, Calib3d.CALIB_USE_INTRINSIC_GUESS);
-
-        for (int rIdx = 0; rIdx < cameraMatrix.rows(); rIdx++) {
-            for (int cIdx = 0; cIdx < cameraMatrix.cols(); cIdx++) {
-                double[] val = cameraMatrix.get(rIdx, cIdx);
-                Log.d(TAG, String.format("Camera matrix %f at %d %d", val[0], rIdx, cIdx ));
-            }
-        }
-        for (int rIdx = 0; rIdx < tvecs.get(0).rows(); rIdx++) {
-            for (int cIdx = 0; cIdx < tvecs.get(0).cols(); cIdx++) {
-                double[] val = tvecs.get(0).get(rIdx, cIdx);
-                Log.d(TAG, String.format("tvec matrix %f at %d %d", val[0], rIdx, cIdx ));
-            }
-        }
-        for (int rIdx = 0; rIdx < rvecs.get(0).rows(); rIdx++) {
-            for (int cIdx = 0; cIdx < rvecs.get(0).cols(); cIdx++) {
-                double[] val = rvecs.get(0).get(rIdx, cIdx);
-                Log.d(TAG, String.format("rvec matrix %f at %d %d", val[0], rIdx, cIdx ));
-            }
-        }
+        //Output arrays
+        Mat rvecs = new Mat();
+        Mat tvecs = new Mat();
+        Calib3d.solvePnP(objectPointView, imagePointView, cameraMatrix, distCoefs, rvecs, tvecs);
 
         Mat rodr = new Mat();
-        Calib3d.Rodrigues(rvecs.get(0), rodr);
-        context.render(rodr, tvecs.get(0));
+        Calib3d.Rodrigues(rvecs, rodr);
+
+
+        //Debug
+        for (int rIdx = 0; rIdx < cameraMatrix.rows(); rIdx++) {
+            for (int cIdx = 0; cIdx < cameraMatrix.cols(); cIdx++) {
+                double[] val = cameraMatrix.get(rIdx, cIdx);
+                Log.d(TAG, String.format("Camera view matrix [%d %d] = %f", rIdx, cIdx, val[0]));
+            }
+        }
+        for (int rIdx = 0; rIdx < tvecs.rows(); rIdx++) {
+            for (int cIdx = 0; cIdx < tvecs.cols(); cIdx++) {
+                double[] val = tvecs.get(rIdx, cIdx);
+                Log.d(TAG, String.format("tvec matrix [%d %d] = %f", rIdx, cIdx, val[0]));
+            }
+        }
+        for (int rIdx = 0; rIdx < rodr.rows(); rIdx++) {
+            for (int cIdx = 0; cIdx < rodr.cols(); cIdx++) {
+                double[] val = rodr.get(rIdx, cIdx);
+                Log.d(TAG, String.format("Rodrigues matrix [%d %d] = %f", rIdx, cIdx, val[0]));
+            }
+        }
+
+
+        //Render the box
+        context.render(rodr, tvecs);
     }
 
 
@@ -226,7 +213,7 @@ public class SceneDetector implements CameraView.CameraViewListener {
 
         public void run()
         {
-            //Log.d(TAG, String.format("Detecting scene [%d]", getId()));
+            Log.d(TAG, String.format("Detecting scene [%d]", getId()));
 
             MatOfKeyPoint keypoints = new MatOfKeyPoint();
             sceneDetector.detector.detect(image, keypoints);
@@ -273,6 +260,7 @@ public class SceneDetector implements CameraView.CameraViewListener {
                 }
 
                 if (resList.size() == 4) {
+                    detected = true;
                     sceneDetector.calibrate(image, resList);
                 }
             }
