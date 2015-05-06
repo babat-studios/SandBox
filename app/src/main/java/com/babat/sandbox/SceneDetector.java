@@ -62,14 +62,7 @@ public class SceneDetector implements CameraView.CameraViewListener {
     {
         if (!detected && !busy) {
             busy = true;
-
-            Mat rgb = new Mat(1080 + 1080 / 2, 1920, CvType.CV_8UC1);
-            rgb.put(0, 0, data);
-            Imgproc.cvtColor(rgb, rgb, Imgproc.COLOR_YUV2RGB_YV12);
-
-            //Log.d(TAG, String.format("Test %d %d", rgb.width(), rgb.height()));
-
-            DetectWorker dWorker = new DetectWorker(this, rgb);
+            DetectWorker dWorker = new DetectWorker(this, data);
             dWorker.start();
         }
     }
@@ -195,10 +188,12 @@ public class SceneDetector implements CameraView.CameraViewListener {
         private SceneDetector sceneDetector;
         private Mat image;
 
-        public DetectWorker(SceneDetector det, Mat img)
+        public DetectWorker(SceneDetector det, byte[] data)
         {
             sceneDetector = det;
-            image = img;
+            image = new Mat(1080 + 1080/2, 1920, CvType.CV_8UC1);
+            image.put(0, 0, data);
+            Imgproc.cvtColor(image, image, Imgproc.COLOR_YUV2RGB_YV12);
         }
 
         public void run()
