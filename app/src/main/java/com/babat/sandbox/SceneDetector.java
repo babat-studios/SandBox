@@ -130,22 +130,27 @@ public class SceneDetector implements CameraView.CameraViewListener {
         Collections.sort(xs);
         Collections.sort(ys);
 
-        List<Point3> objectPnts = new ArrayList<Point3>();
-        List<Point> imagePnts = new ArrayList<Point>();
+        Point3[] objectPnts = new Point3[4];
+        Point[] imagePnts = new Point[4];
         for (Point pnt : crosses) {
             int xIdx = xs.indexOf(pnt.x);
             int yIdx = ys.indexOf(pnt.y);
 
+            int mIdx;
             if (xIdx < 2 && yIdx < 2) {
-                objectPnts.add(new Point3(-1, -1, 0));
+                mIdx = 3;
+                objectPnts[mIdx] = new Point3(-1, -1, 0);
             } else if (xIdx >= 2 && yIdx < 2) {
-                objectPnts.add(new Point3(1, -1, 0));
+                mIdx = 0;
+                objectPnts[mIdx] = new Point3(1, -1, 0);
             } else if (xIdx >= 2 && yIdx >= 2) {
-                objectPnts.add(new Point3(1, 1, 0));
+                mIdx = 1;
+                objectPnts[mIdx] = new Point3(1, 1, 0);
             } else {
-                objectPnts.add(new Point3(-1, 1, 0));
+                mIdx = 2;
+                objectPnts[mIdx] = new Point3(-1, 1, 0);
             }
-            imagePnts.add(new Point(pnt.x, pnt.y));
+            imagePnts[mIdx] = new Point(pnt.x, pnt.y);
         }
 //        // ADJUSTMENT
 //        imagePointView.put(3,0,
@@ -154,9 +159,9 @@ public class SceneDetector implements CameraView.CameraViewListener {
 //                imagePointView.get(2,1)[0] - ( imagePointView.get(1,1)[0] - imagePointView.get(0,1)[0]));
 
         MatOfPoint3f objectPointView = new MatOfPoint3f();
-        objectPointView.fromList(objectPnts);
+        objectPointView.fromArray(objectPnts);
         MatOfPoint2f imagePointView = new MatOfPoint2f();
-        imagePointView.fromList(imagePnts);
+        imagePointView.fromArray(imagePnts);
 
 
         //Debug
@@ -170,12 +175,12 @@ public class SceneDetector implements CameraView.CameraViewListener {
 
 
         //Output arrays
-        Mat rvecs = new Mat();
-        Mat tvecs = new Mat();
-        Calib3d.solvePnP(objectPointView, imagePointView, cameraMatrix, distCoefs, rvecs, tvecs);
+        Mat rvec = new Mat();
+        Mat tvec = new Mat();
+        Calib3d.solvePnP(objectPointView, imagePointView, cameraMatrix, distCoefs, rvec, tvec);
 
         Mat rodr = new Mat();
-        Calib3d.Rodrigues(rvecs, rodr);
+        Calib3d.Rodrigues(rvec, rodr);
 
 
         //Debug
@@ -185,9 +190,9 @@ public class SceneDetector implements CameraView.CameraViewListener {
                 Log.d(TAG, String.format("Camera view matrix [%d %d] = %f", rIdx, cIdx, val[0]));
             }
         }
-        for (int rIdx = 0; rIdx < tvecs.rows(); rIdx++) {
-            for (int cIdx = 0; cIdx < tvecs.cols(); cIdx++) {
-                double[] val = tvecs.get(rIdx, cIdx);
+        for (int rIdx = 0; rIdx < tvec.rows(); rIdx++) {
+            for (int cIdx = 0; cIdx < tvec.cols(); cIdx++) {
+                double[] val = tvec.get(rIdx, cIdx);
                 Log.d(TAG, String.format("tvec matrix [%d %d] = %f", rIdx, cIdx, val[0]));
             }
         }
@@ -200,7 +205,7 @@ public class SceneDetector implements CameraView.CameraViewListener {
 
 
         //Render the box
-        context.render(rodr, tvecs);
+        context.render(rodr, tvec);
     }
 
 
