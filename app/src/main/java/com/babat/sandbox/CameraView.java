@@ -10,7 +10,6 @@ import android.view.SurfaceHolder;
 import android.view.SurfaceView;
 
 
-
 public class CameraView extends SurfaceView implements SurfaceHolder.Callback, Camera.PreviewCallback{
 
     private static final String TAG = "TestCamera";

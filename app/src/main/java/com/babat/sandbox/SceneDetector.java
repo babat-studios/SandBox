@@ -31,7 +31,7 @@ import java.util.Map;
 
 public class SceneDetector implements CameraView.CameraViewListener {
 
-    protected static final String TAG = "Detector";
+    protected static final String TAG = "SceneDetector";
 
     private static SceneDetector instance;
 
@@ -58,7 +58,7 @@ public class SceneDetector implements CameraView.CameraViewListener {
     }
 
 
-    public void onCameraFrame(byte[] data)
+    public synchronized void onCameraFrame(byte[] data)
     {
         if (!detected && !busy) {
             busy = true;

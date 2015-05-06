@@ -17,6 +17,7 @@ public class MainActivity extends Activity {
 
     private CameraView mCameraView;
     private SceneDetector sceneDetector;
+    private PositionDetector positionDetector;
 
 
     //ACTIVITY
@@ -31,6 +32,8 @@ public class MainActivity extends Activity {
 
         mCameraView = (CameraView) findViewById(R.id.CameraView);
 
+        positionDetector = PositionDetector.getInstance(this);
+
         OpenCVLoader.initAsync(OpenCVLoader.OPENCV_VERSION_2_4_9, this, mLoaderCallback);
     }
 
@@ -42,6 +45,7 @@ public class MainActivity extends Activity {
         if (mCameraView != null) {
             mCameraView.enableView();
         }
+        positionDetector.enableDetector();
     }
 
 
@@ -52,6 +56,7 @@ public class MainActivity extends Activity {
         if (mCameraView != null) {
             mCameraView.disableView();
         }
+        positionDetector.disableDetector();
     }
 
 
@@ -62,6 +67,7 @@ public class MainActivity extends Activity {
         if (mCameraView != null) {
             mCameraView.disableView();
         }
+        positionDetector.disableDetector();
     }
 
 
