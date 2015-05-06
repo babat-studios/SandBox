@@ -67,7 +67,7 @@ public class SceneDetector implements CameraView.CameraViewListener {
     {
         if (!detected && !busy) {
             busy = true;
-            DetectWorker dWorker = new DetectWorker(this, data);
+            DetectWorker dWorker = new DetectWorker(data);
             dWorker.start();
         }
     }
@@ -92,131 +92,12 @@ public class SceneDetector implements CameraView.CameraViewListener {
     }
 
 
-    private void calibrate(Mat img, List<Point> crosses)
-    {
-        Log.d(TAG, "Calibrating camera");
-
-
-        //Input image size
-        Size imgSize = img.size();
-
-        //Zero distortion coefs
-        MatOfDouble distCoefs = new MatOfDouble();
-
-        //Nexus 5 camera view matrix
-        Mat cameraMatrix = new Mat(3,3,5);
-        //Estimation:
-        double focal_mm = 3.97;
-        double sensor_width_mm = 4.54;
-        double focal_px = (focal_mm/sensor_width_mm) * imgSize.width;
-        cameraMatrix.put(0, 0, focal_px);
-        cameraMatrix.put(0, 1, 0);
-        cameraMatrix.put(0, 2, imgSize.width/2);
-        cameraMatrix.put(1, 0, 0);
-        cameraMatrix.put(1, 1, focal_px);
-        cameraMatrix.put(1, 2, imgSize.height/2);
-        cameraMatrix.put(2, 0, 0);
-        cameraMatrix.put(2, 1, 0);
-        cameraMatrix.put(2, 2, 1);
-
-
-        //Corner recognition
-        List<Double> xs = new ArrayList<Double>();
-        List<Double> ys = new ArrayList<Double>();
-        for (Point pnt : crosses) {
-            xs.add(pnt.x);
-            ys.add(pnt.y);
-        }
-        Collections.sort(xs);
-        Collections.sort(ys);
-
-        Point3[] objectPnts = new Point3[4];
-        Point[] imagePnts = new Point[4];
-        for (Point pnt : crosses) {
-            int xIdx = xs.indexOf(pnt.x);
-            int yIdx = ys.indexOf(pnt.y);
-
-            int mIdx;
-            if (xIdx < 2 && yIdx < 2) {
-                mIdx = 3;
-                objectPnts[mIdx] = new Point3(-1, -1, 0);
-            } else if (xIdx >= 2 && yIdx < 2) {
-                mIdx = 0;
-                objectPnts[mIdx] = new Point3(1, -1, 0);
-            } else if (xIdx >= 2 && yIdx >= 2) {
-                mIdx = 1;
-                objectPnts[mIdx] = new Point3(1, 1, 0);
-            } else {
-                mIdx = 2;
-                objectPnts[mIdx] = new Point3(-1, 1, 0);
-            }
-            imagePnts[mIdx] = new Point(pnt.x, pnt.y);
-        }
-//        // ADJUSTMENT
-//        imagePointView.put(3,0,
-//                imagePointView.get(2,0)[0] - ( imagePointView.get(1,0)[0] - imagePointView.get(0,0)[0]));
-//        imagePointView.put(3,1,
-//                imagePointView.get(2,1)[0] - ( imagePointView.get(1,1)[0] - imagePointView.get(0,1)[0]));
-
-        MatOfPoint3f objectPointView = new MatOfPoint3f();
-        objectPointView.fromArray(objectPnts);
-        MatOfPoint2f imagePointView = new MatOfPoint2f();
-        imagePointView.fromArray(imagePnts);
-
-
-        //Debug
-        for (int tIdx = 0; tIdx < 4; tIdx++) {
-            Log.d(TAG,  String.format("Corner %d :: [%f %f] => [%f %f]", tIdx,
-                    objectPointView.get(tIdx,0)[0],
-                    objectPointView.get(tIdx,0)[1],
-                    imagePointView.get(tIdx,0)[0],
-                    imagePointView.get(tIdx,0)[1]));
-        }
-
-
-        //Output arrays
-        Mat rvec = new Mat();
-        Mat tvec = new Mat();
-        Calib3d.solvePnP(objectPointView, imagePointView, cameraMatrix, distCoefs, rvec, tvec);
-
-        Mat rodr = new Mat();
-        Calib3d.Rodrigues(rvec, rodr);
-
-
-        //Debug
-        for (int rIdx = 0; rIdx < cameraMatrix.rows(); rIdx++) {
-            for (int cIdx = 0; cIdx < cameraMatrix.cols(); cIdx++) {
-                double[] val = cameraMatrix.get(rIdx, cIdx);
-                Log.d(TAG, String.format("Camera view matrix [%d %d] = %f", rIdx, cIdx, val[0]));
-            }
-        }
-        for (int rIdx = 0; rIdx < tvec.rows(); rIdx++) {
-            for (int cIdx = 0; cIdx < tvec.cols(); cIdx++) {
-                double[] val = tvec.get(rIdx, cIdx);
-                Log.d(TAG, String.format("tvec matrix [%d %d] = %f", rIdx, cIdx, val[0]));
-            }
-        }
-        for (int rIdx = 0; rIdx < rodr.rows(); rIdx++) {
-            for (int cIdx = 0; cIdx < rodr.cols(); cIdx++) {
-                double[] val = rodr.get(rIdx, cIdx);
-                Log.d(TAG, String.format("Rodrigues matrix [%d %d] = %f", rIdx, cIdx, val[0]));
-            }
-        }
-
-
-        //Render the box
-        context.render(rodr, tvec);
-    }
-
-
     private class DetectWorker extends Thread {
 
-        private SceneDetector sceneDetector;
         private Mat image;
 
-        public DetectWorker(SceneDetector det, byte[] data)
+        public DetectWorker(byte[] data)
         {
-            sceneDetector = det;
             image = new Mat(1080 + 1080/2, 1920, CvType.CV_8UC1);
             image.put(0, 0, data);
             Imgproc.cvtColor(image, image, Imgproc.COLOR_YUV2RGB_YV12);
@@ -227,10 +108,10 @@ public class SceneDetector implements CameraView.CameraViewListener {
             Log.d(TAG, String.format("Detecting scene [%d]", getId()));
 
             MatOfKeyPoint keypoints = new MatOfKeyPoint();
-            sceneDetector.detector.detect(image, keypoints);
+            detector.detect(image, keypoints);
 
             Mat descriptors  = new Mat();
-            sceneDetector.extractor.compute(image, keypoints, descriptors);
+            extractor.compute(image, keypoints, descriptors);
 
             if (descriptors.cols() + descriptors.rows() > 0) {
                 MatOfDMatch matches = new MatOfDMatch();
@@ -271,12 +152,128 @@ public class SceneDetector implements CameraView.CameraViewListener {
                 }
 
                 if (resList.size() == 4) {
-                    sceneDetector.detected = true;
-                    sceneDetector.calibrate(image, resList);
+                    detected = true;
+                    calibrate(image, resList);
                 }
             }
 
-            sceneDetector.busy = false;
+            busy = false;
+        }
+
+        private void calibrate(Mat img, List<Point> crosses)
+        {
+            Log.d(TAG, "Calibrating camera");
+
+
+            //Input image size
+            Size imgSize = img.size();
+
+            //Zero distortion coefs
+            MatOfDouble distCoefs = new MatOfDouble();
+
+            //Nexus 5 camera view matrix
+            Mat cameraMatrix = new Mat(3,3,5);
+            //Estimation:
+            double focal_mm = 3.97;
+            double sensor_width_mm = 4.54;
+            double focal_px = (focal_mm/sensor_width_mm) * imgSize.width;
+            cameraMatrix.put(0, 0, focal_px);
+            cameraMatrix.put(0, 1, 0);
+            cameraMatrix.put(0, 2, imgSize.width/2);
+            cameraMatrix.put(1, 0, 0);
+            cameraMatrix.put(1, 1, focal_px);
+            cameraMatrix.put(1, 2, imgSize.height/2);
+            cameraMatrix.put(2, 0, 0);
+            cameraMatrix.put(2, 1, 0);
+            cameraMatrix.put(2, 2, 1);
+
+
+            //Corner recognition
+            List<Double> xs = new ArrayList<Double>();
+            List<Double> ys = new ArrayList<Double>();
+            for (Point pnt : crosses) {
+                xs.add(pnt.x);
+                ys.add(pnt.y);
+            }
+            Collections.sort(xs);
+            Collections.sort(ys);
+
+            Point3[] objectPnts = new Point3[4];
+            Point[] imagePnts = new Point[4];
+            for (Point pnt : crosses) {
+                int xIdx = xs.indexOf(pnt.x);
+                int yIdx = ys.indexOf(pnt.y);
+
+                int mIdx;
+                if (xIdx < 2 && yIdx < 2) {
+                    mIdx = 3;
+                    objectPnts[mIdx] = new Point3(-1, -1, 0);
+                } else if (xIdx >= 2 && yIdx < 2) {
+                    mIdx = 0;
+                    objectPnts[mIdx] = new Point3(1, -1, 0);
+                } else if (xIdx >= 2 && yIdx >= 2) {
+                    mIdx = 1;
+                    objectPnts[mIdx] = new Point3(1, 1, 0);
+                } else {
+                    mIdx = 2;
+                    objectPnts[mIdx] = new Point3(-1, 1, 0);
+                }
+                imagePnts[mIdx] = new Point(pnt.x, pnt.y);
+            }
+//        // ADJUSTMENT
+//        imagePointView.put(3,0,
+//                imagePointView.get(2,0)[0] - ( imagePointView.get(1,0)[0] - imagePointView.get(0,0)[0]));
+//        imagePointView.put(3,1,
+//                imagePointView.get(2,1)[0] - ( imagePointView.get(1,1)[0] - imagePointView.get(0,1)[0]));
+
+            MatOfPoint3f objectPointView = new MatOfPoint3f();
+            objectPointView.fromArray(objectPnts);
+            MatOfPoint2f imagePointView = new MatOfPoint2f();
+            imagePointView.fromArray(imagePnts);
+
+
+            //Debug
+            for (int tIdx = 0; tIdx < 4; tIdx++) {
+                Log.d(TAG,  String.format("Corner %d :: [%f %f] => [%f %f]", tIdx,
+                        objectPointView.get(tIdx,0)[0],
+                        objectPointView.get(tIdx,0)[1],
+                        imagePointView.get(tIdx,0)[0],
+                        imagePointView.get(tIdx,0)[1]));
+            }
+
+
+            //Output arrays
+            Mat rvec = new Mat();
+            Mat tvec = new Mat();
+            Calib3d.solvePnP(objectPointView, imagePointView, cameraMatrix, distCoefs, rvec, tvec);
+
+            Mat rodr = new Mat();
+            Calib3d.Rodrigues(rvec, rodr);
+
+
+            //Debug
+            for (int rIdx = 0; rIdx < cameraMatrix.rows(); rIdx++) {
+                for (int cIdx = 0; cIdx < cameraMatrix.cols(); cIdx++) {
+                    double[] val = cameraMatrix.get(rIdx, cIdx);
+                    Log.d(TAG, String.format("Camera view matrix [%d %d] = %f", rIdx, cIdx, val[0]));
+                }
+            }
+            for (int rIdx = 0; rIdx < tvec.rows(); rIdx++) {
+                for (int cIdx = 0; cIdx < tvec.cols(); cIdx++) {
+                    double[] val = tvec.get(rIdx, cIdx);
+                    Log.d(TAG, String.format("tvec matrix [%d %d] = %f", rIdx, cIdx, val[0]));
+                }
+            }
+            for (int rIdx = 0; rIdx < rodr.rows(); rIdx++) {
+                for (int cIdx = 0; cIdx < rodr.cols(); cIdx++) {
+                    double[] val = rodr.get(rIdx, cIdx);
+                    Log.d(TAG, String.format("Rodrigues matrix [%d %d] = %f", rIdx, cIdx, val[0]));
+                }
+            }
+
+
+            //Render the box
+            context.render(rodr, tvec);
         }
 
     };
