@@ -75,12 +75,12 @@ public class MainActivity extends Activity {
 
 
     //RENDERING
-    void render(Mat rvec, Mat tvec)
+    void render(Mat rodr, Mat rvec, Mat tvec)
     {
         Mat rtrans = new Mat();
         Mat cam = new Mat();
 
-        Core.transpose(rvec, rtrans);
+        Core.transpose(rodr, rtrans);
 
         Vector3D rotation = new Vector3D(
             (float) rvec.get(0, 0)[0],

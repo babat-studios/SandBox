@@ -204,27 +204,22 @@ public class SceneDetector implements CameraView.CameraViewListener {
                 int xIdx = xs.indexOf(pnt.x);
                 int yIdx = ys.indexOf(pnt.y);
 
-                int mIdx;
-                if (xIdx < 2 && yIdx < 2) {
+                int mIdx; //clockwise
+                if (xIdx < 2 && yIdx < 2) { //top left
                     mIdx = 3;
                     objectPnts[mIdx] = new Point3(-1, -1, 0);
-                } else if (xIdx >= 2 && yIdx < 2) {
+                } else if (xIdx >= 2 && yIdx < 2) { //top right
                     mIdx = 0;
                     objectPnts[mIdx] = new Point3(1, -1, 0);
-                } else if (xIdx >= 2 && yIdx >= 2) {
+                } else if (xIdx >= 2 && yIdx >= 2) { //bottom right
                     mIdx = 1;
                     objectPnts[mIdx] = new Point3(1, 1, 0);
-                } else {
+                } else { //bottom left
                     mIdx = 2;
                     objectPnts[mIdx] = new Point3(-1, 1, 0);
                 }
                 imagePnts[mIdx] = new Point(pnt.x, pnt.y);
             }
-//        // ADJUSTMENT
-//        imagePointView.put(3,0,
-//                imagePointView.get(2,0)[0] - ( imagePointView.get(1,0)[0] - imagePointView.get(0,0)[0]));
-//        imagePointView.put(3,1,
-//                imagePointView.get(2,1)[0] - ( imagePointView.get(1,1)[0] - imagePointView.get(0,1)[0]));
 
             MatOfPoint3f objectPointView = new MatOfPoint3f();
             objectPointView.fromArray(objectPnts);
@@ -273,7 +268,7 @@ public class SceneDetector implements CameraView.CameraViewListener {
 
 
             //Render the box
-            context.render(rodr, tvec);
+            context.render(rodr, rvec, tvec);
         }
 
     };
