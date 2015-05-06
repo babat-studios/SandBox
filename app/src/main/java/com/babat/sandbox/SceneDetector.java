@@ -99,18 +99,24 @@ public class SceneDetector implements CameraView.CameraViewListener {
 
         //Input image size
         Size imgSize = img.size();
+
         //Zero distortion coefs
         MatOfDouble distCoefs = new MatOfDouble();
+
         //Nexus 5 camera view matrix
         Mat cameraMatrix = new Mat(3,3,5);
-        cameraMatrix.put(0,0,1697);
-        cameraMatrix.put(0,1,0);
-        cameraMatrix.put(0,2,960);
-        cameraMatrix.put(1,0,0);
-        cameraMatrix.put(1,1,1697);
-        cameraMatrix.put(1,2,540);
-        cameraMatrix.put(2,0,0);
-        cameraMatrix.put(2,1,0);
+        //Estimation:
+        double focal_mm = 3.97;
+        double sensor_width_mm = 4.54;
+        double focal_px = (focal_mm/sensor_width_mm) * imgSize.width;
+        cameraMatrix.put(0, 0, focal_px);
+        cameraMatrix.put(0, 1, 0);
+        cameraMatrix.put(0, 2, imgSize.width/2);
+        cameraMatrix.put(1, 0, 0);
+        cameraMatrix.put(1, 1, focal_px);
+        cameraMatrix.put(1, 2, imgSize.height/2);
+        cameraMatrix.put(2, 0, 0);
+        cameraMatrix.put(2, 1, 0);
         cameraMatrix.put(2, 2, 1);
 
 
@@ -260,7 +266,7 @@ public class SceneDetector implements CameraView.CameraViewListener {
                 }
 
                 if (resList.size() == 4) {
-                    detected = true;
+                    sceneDetector.detected = true;
                     sceneDetector.calibrate(image, resList);
                 }
             }
