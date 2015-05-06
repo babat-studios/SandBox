@@ -3,6 +3,7 @@ package com.babat.sandbox;
 import org.opencv.android.BaseLoaderCallback;
 import org.opencv.android.LoaderCallbackInterface;
 import org.opencv.android.OpenCVLoader;
+import org.opencv.core.Core;
 import org.opencv.core.Mat;
 
 import android.app.Activity;
@@ -10,11 +11,14 @@ import android.os.Bundle;
 import android.util.Log;
 import android.view.WindowManager;
 
+import com.babat.sandbox.graphics.MainGLSurfaceView;
+import com.babat.sandbox.graphics.Vector3D;
 
 public class MainActivity extends Activity {
 
     protected static final String TAG = "SandBox";
 
+    private MainGLSurfaceView mGraphicsView;
     private CameraView mCameraView;
     private SceneDetector sceneDetector;
 
@@ -30,6 +34,10 @@ public class MainActivity extends Activity {
         setContentView(R.layout.activity_main);
 
         mCameraView = (CameraView) findViewById(R.id.CameraView);
+        mGraphicsView = (MainGLSurfaceView) findViewById(R.id.GraphicsView);
+
+        mCameraView.setZOrderOnTop(false);
+        mGraphicsView.setZOrderOnTop(true);
 
         OpenCVLoader.initAsync(OpenCVLoader.OPENCV_VERSION_2_4_9, this, mLoaderCallback);
     }
@@ -68,7 +76,26 @@ public class MainActivity extends Activity {
     //RENDERING
     void render(Mat rvec, Mat tvec)
     {
-        //RENDER!
+        Mat rtrans = new Mat();
+        Mat cam = new Mat();
+
+        Core.transpose(rvec, rtrans);
+
+        Vector3D rotation = new Vector3D(
+            (float) rvec.get(0, 0)[0],
+            (float) rvec.get(1, 0)[0],
+            (float) rvec.get(2, 0)[0]
+        );
+
+        Core.gemm(rtrans, tvec, 1, tvec, 0, cam);
+
+        Vector3D translation = new Vector3D(
+            (float) cam.get(0, 0)[0],
+            (float) cam.get(1, 0)[0],
+            (float) cam.get(2, 0)[0]
+        );
+
+        mGraphicsView.startRendering(rotation, translation);
     }
 
 

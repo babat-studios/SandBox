@@ -6,7 +6,10 @@ import org.opencv.core.CvType;
 import org.opencv.core.Mat;
 import org.opencv.core.MatOfDMatch;
 import org.opencv.core.MatOfKeyPoint;
+import org.opencv.core.MatOfPoint3f;
+import org.opencv.core.MatOfPoint2f;
 import org.opencv.core.Point;
+import org.opencv.core.Point3;
 import org.opencv.core.Size;
 import org.opencv.features2d.DMatch;
 import org.opencv.features2d.DescriptorExtractor;
@@ -14,6 +17,7 @@ import org.opencv.features2d.DescriptorMatcher;
 import org.opencv.features2d.FeatureDetector;
 import org.opencv.features2d.KeyPoint;
 import org.opencv.imgproc.Imgproc;
+import org.opencv.core.Core;
 
 import android.content.Context;
 import android.graphics.Bitmap;
@@ -104,61 +108,83 @@ public class SceneDetector implements CameraView.CameraViewListener {
         Collections.sort(xs);
         Collections.sort(ys);
 
-        Mat objectPointView = new Mat(4,3,5);
-        Mat imagePointView = new Mat(4,2,5);
+        List<Point3> objectPnts = new ArrayList<Point3>();
+        List<Point> imagePnts = new ArrayList<Point>();
         for (Point pnt : crosses) {
             int xIdx = xs.indexOf(pnt.x);
             int yIdx = ys.indexOf(pnt.y);
 
-            int mIdx = 3;
             if (xIdx < 2 && yIdx < 2) {
-                mIdx = 0;
-                objectPointView.put(mIdx,0,imgSize.width/2 - 300);
-                objectPointView.put(mIdx,1,imgSize.height/2 - 300);
+                objectPnts.add(new Point3(-1, -1, 0));
             } else if (xIdx >= 2 && yIdx < 2) {
-                mIdx = 1;
-                objectPointView.put(mIdx,0,imgSize.width/2 + 300);
-                objectPointView.put(mIdx,1,imgSize.height/2 - 300);
+                objectPnts.add(new Point3(1, -1, 0));
             } else if (xIdx >= 2 && yIdx >= 2) {
-                mIdx = 2;
-                objectPointView.put(mIdx,0,imgSize.width/2 + 300);
-                objectPointView.put(mIdx,1,imgSize.height/2 + 300);
+                objectPnts.add(new Point3(1, 1, 0));
             } else {
-                objectPointView.put(mIdx,0,imgSize.width/2 - 300);
-                objectPointView.put(mIdx,1,imgSize.height/2 + 300);
+                objectPnts.add(new Point3(-1, 1, 0));
             }
-            objectPointView.put(mIdx,2,0);
+            imagePnts.add(new Point(pnt.x, pnt.y));
+        }
+//        // ADJUSTMENT
+//        imagePointView.put(3,0,
+//                imagePointView.get(2,0)[0] - ( imagePointView.get(1,0)[0] - imagePointView.get(0,0)[0]));
+//        imagePointView.put(3,1,
+//                imagePointView.get(2,1)[0] - ( imagePointView.get(1,1)[0] - imagePointView.get(0,1)[0]));
+        MatOfPoint3f objectPointView = new MatOfPoint3f();
+        objectPointView.fromList(objectPnts);
+        MatOfPoint2f imagePointView = new MatOfPoint2f();
+        imagePointView.fromList(imagePnts);
 
-            imagePointView.put(mIdx,0,pnt.x);
-            imagePointView.put(mIdx,1,pnt.y);
+
+
+
+        List<MatOfPoint3f> objectPoints = new ArrayList<MatOfPoint3f>();
+        objectPoints.add(objectPointView);
+        List<MatOfPoint2f> imagePoints = new ArrayList<MatOfPoint2f>();
+        imagePoints.add(imagePointView);
+
+        Mat cameraMatrix = new Mat(3,3,5); //Calib3d.initCameraMatrix2D(objectPoints, imagePoints, imgSize);
+        cameraMatrix.put(0,0,1697);
+        cameraMatrix.put(0,1,0);
+        cameraMatrix.put(0,2,960);
+        cameraMatrix.put(1,0,0);
+        cameraMatrix.put(1,1,1697);
+        cameraMatrix.put(1,2,540);
+        cameraMatrix.put(2,0,0);
+        cameraMatrix.put(2,1,0);
+        cameraMatrix.put(2,2,1);
+
+        for (int rIdx = 0; rIdx < cameraMatrix.rows(); rIdx++) {
+            for (int cIdx = 0; cIdx < cameraMatrix.cols(); cIdx++) {
+                double[] val = cameraMatrix.get(rIdx, cIdx);
+                Log.d(TAG, String.format("Camera matrix %f at %d %d", val[0], rIdx, cIdx ));
+            }
         }
 
-        // ADJUSTMENT
-//        imagePointView.put(3,0,
-//                imagePointView.get(3,0)[0] + ( imagePointView.get(1,0)[0] - imagePointView.get(0,0)[0]));
-//        imagePointView.put(3,1,
-//                imagePointView.get(3,1)[0] + ( imagePointView.get(1,1)[0] - imagePointView.get(0,1)[0]));
 
-        //DEBUG
-//        for (int tIdx = 0; tIdx < 4; tIdx++) {
-//            Log.d(TAG,
-//                    String.format("test_a %d :: %f %f", tIdx, objectPointView.get(tIdx,0)[0], objectPointView.get(tIdx,1)[0])
-//            );
-//            Log.d(TAG,
-//                    String.format("test_b %d :: %f %f", tIdx, imagePointView.get(tIdx,0)[0], imagePointView.get(tIdx,1)[0])
-//            );
-//        }
-
-        List<Mat> objectPoints = new ArrayList<Mat>();
-        objectPoints.add(objectPointView);
-        List<Mat> imagePoints = new ArrayList<Mat>();
-        imagePoints.add(imagePointView);
-        Mat cameraMatrix = new Mat();
         Mat distCoefs = new Mat();
         List<Mat> rvecs = new ArrayList<Mat>();
         List<Mat> tvecs = new ArrayList<Mat>();
 
-        Calib3d.calibrateCamera(objectPoints, imagePoints, imgSize, cameraMatrix, distCoefs, rvecs, tvecs);
+        Mat obj1 = new Mat();
+        Mat img1 = new Mat();
+
+        objectPointView.convertTo(obj1, 5);
+        imagePointView.convertTo(img1, 5);
+
+        //        //DEBUG
+//        for (int tIdx = 0; tIdx < 4; tIdx++) {
+//            Log.d(TAG,  String.format("test_a %d :: %f %f", tIdx, obj1.get(tIdx,0)[0], obj1.get(tIdx,1)[0]) );
+//            Log.d(TAG,  String.format("test_b %d :: %f %f", tIdx, img1.get(tIdx,0)[0], img1.get(tIdx,1)[0]) );
+//        }
+
+        List<Mat> obj1List = new ArrayList<Mat>();
+        obj1List.add(obj1);
+        List<Mat> img1List = new ArrayList<Mat>();
+        img1List.add(img1);
+
+
+        Calib3d.calibrateCamera(obj1List, img1List, imgSize, cameraMatrix, distCoefs, rvecs, tvecs, Calib3d.CALIB_USE_INTRINSIC_GUESS);
 
         for (int rIdx = 0; rIdx < cameraMatrix.rows(); rIdx++) {
             for (int cIdx = 0; cIdx < cameraMatrix.cols(); cIdx++) {
@@ -179,7 +205,9 @@ public class SceneDetector implements CameraView.CameraViewListener {
             }
         }
 
-        context.render(rvecs.get(0), tvecs.get(0));
+        Mat rodr = new Mat();
+        Calib3d.Rodrigues(rvecs.get(0), rodr);
+        context.render(rodr, tvecs.get(0));
     }
 
 
@@ -198,7 +226,7 @@ public class SceneDetector implements CameraView.CameraViewListener {
 
         public void run()
         {
-            Log.d(TAG, String.format("Detecting scene [%d]", getId()));
+            //Log.d(TAG, String.format("Detecting scene [%d]", getId()));
 
             MatOfKeyPoint keypoints = new MatOfKeyPoint();
             sceneDetector.detector.detect(image, keypoints);
