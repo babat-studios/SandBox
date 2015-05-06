@@ -2,6 +2,7 @@ package com.babat.vision;
 
 import org.opencv.android.Utils;
 import org.opencv.calib3d.Calib3d;
+import org.opencv.core.CvType;
 import org.opencv.core.Mat;
 import org.opencv.core.MatOfDMatch;
 import org.opencv.core.MatOfKeyPoint;
@@ -12,6 +13,7 @@ import org.opencv.features2d.DescriptorExtractor;
 import org.opencv.features2d.DescriptorMatcher;
 import org.opencv.features2d.FeatureDetector;
 import org.opencv.features2d.KeyPoint;
+import org.opencv.imgproc.Imgproc;
 
 import android.content.Context;
 import android.graphics.Bitmap;
@@ -27,12 +29,13 @@ import java.util.List;
 import java.util.Map;
 
 
-public class SceneDetector {
+public class SceneDetector implements CameraView.CameraViewListener {
 
     protected static final String TAG = "Detector";
 
     private static SceneDetector instance;
-    private static MainActivity context;
+
+    private MainActivity context;
 
     private boolean busy = false;
     private boolean detected = false;
@@ -161,13 +164,6 @@ public class SceneDetector {
     }
 
 
-    private void release()
-    {
-        busy = false;
-    }
-
-
-
     private class Worker extends Thread {
 
         private SceneDetector sceneDetector;
@@ -232,13 +228,13 @@ public class SceneDetector {
                 }
             }
 
-            sceneDetector.release();
+            sceneDetector.busy = false;
         }
 
     };
 
 
-    static SceneDetector getInstance(Context myContext)
+    public static SceneDetector getInstance(Context myContext)
     {
         if (instance == null) {
             instance = new SceneDetector(myContext);
@@ -246,11 +242,18 @@ public class SceneDetector {
         return instance;
     }
 
-    synchronized void compute(Mat inImage)
+
+    public void onCameraFrame(byte[] data)
     {
         if (!detected && !busy) {
             busy = true;
-            new Worker(this, inImage).start();
+            Mat rgb = new Mat(1080 + 1080 / 2, 1920, CvType.CV_8UC1);
+            rgb.put(0, 0, data);
+            Imgproc.cvtColor(rgb, rgb, Imgproc.COLOR_YUV2RGB_YV12);
+            //Log.d(TAG, String.format("Test %d %d", rgb.width(), rgb.height()));
+
+
+            new Worker(this, rgb).start();
         }
     }
 

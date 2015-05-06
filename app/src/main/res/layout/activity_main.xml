@@ -8,8 +8,7 @@
     <com.babat.vision.CameraView
         android:layout_height="match_parent"
         android:layout_width="match_parent"
-        android:visibility="gone"
-        android:id="@+id/HelloOpenCvView"
-        opencv:show_fps="true" />
+        android:id="@+id/CameraView"
+   />
 
 </LinearLayout>
