@@ -1,11 +1,9 @@
-package com.babat.vision;
+package com.babat.sandbox;
 
 import org.opencv.android.BaseLoaderCallback;
 import org.opencv.android.LoaderCallbackInterface;
 import org.opencv.android.OpenCVLoader;
-import org.opencv.core.CvType;
 import org.opencv.core.Mat;
-import org.opencv.imgproc.Imgproc;
 
 import android.app.Activity;
 import android.os.Bundle;
@@ -67,6 +65,13 @@ public class MainActivity extends Activity {
     }
 
 
+    //RENDERING
+    void render(Mat rvec, Mat tvec)
+    {
+        //RENDER!
+    }
+
+
     private BaseLoaderCallback mLoaderCallback = new BaseLoaderCallback(this) {
         @Override
         public void onManagerConnected(int status)
@@ -83,14 +88,5 @@ public class MainActivity extends Activity {
             }
         }
     };
-
-
-    //RENDERING
-
-    void render(Mat rvec, Mat tvec)
-    {
-        //RENDER!
-    }
-
 
 }

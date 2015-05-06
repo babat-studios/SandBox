@@ -5,7 +5,7 @@ android {
     buildToolsVersion "22.0.1"
 
     defaultConfig {
-        applicationId "com.babat.vision"
+        applicationId "com.babat.sandbox"
         minSdkVersion 14
         targetSdkVersion 14
     }

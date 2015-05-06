@@ -1,4 +1,4 @@
-package com.babat.vision;
+package com.babat.sandbox;
 
 import org.opencv.android.Utils;
 import org.opencv.calib3d.Calib3d;
@@ -47,6 +47,32 @@ public class SceneDetector implements CameraView.CameraViewListener {
     private Mat crossMat = new Mat();
     private MatOfKeyPoint crossKeypoints = new MatOfKeyPoint();
     private Mat crossDescriptors = new Mat();
+
+
+    public static SceneDetector getInstance(Context myContext)
+    {
+        if (instance == null) {
+            instance = new SceneDetector(myContext);
+        }
+        return instance;
+    }
+
+
+    public void onCameraFrame(byte[] data)
+    {
+        if (!detected && !busy) {
+            busy = true;
+
+            Mat rgb = new Mat(1080 + 1080 / 2, 1920, CvType.CV_8UC1);
+            rgb.put(0, 0, data);
+            Imgproc.cvtColor(rgb, rgb, Imgproc.COLOR_YUV2RGB_YV12);
+
+            //Log.d(TAG, String.format("Test %d %d", rgb.width(), rgb.height()));
+
+            DetectWorker dWorker = new DetectWorker(this, rgb);
+            dWorker.start();
+        }
+    }
 
 
     private SceneDetector(Context myContext)
@@ -164,12 +190,12 @@ public class SceneDetector implements CameraView.CameraViewListener {
     }
 
 
-    private class Worker extends Thread {
+    private class DetectWorker extends Thread {
 
         private SceneDetector sceneDetector;
         private Mat image;
 
-        public Worker(SceneDetector det, Mat img)
+        public DetectWorker(SceneDetector det, Mat img)
         {
             sceneDetector = det;
             image = img;
@@ -232,29 +258,5 @@ public class SceneDetector implements CameraView.CameraViewListener {
         }
 
     };
-
-
-    public static SceneDetector getInstance(Context myContext)
-    {
-        if (instance == null) {
-            instance = new SceneDetector(myContext);
-        }
-        return instance;
-    }
-
-
-    public void onCameraFrame(byte[] data)
-    {
-        if (!detected && !busy) {
-            busy = true;
-            Mat rgb = new Mat(1080 + 1080 / 2, 1920, CvType.CV_8UC1);
-            rgb.put(0, 0, data);
-            Imgproc.cvtColor(rgb, rgb, Imgproc.COLOR_YUV2RGB_YV12);
-            //Log.d(TAG, String.format("Test %d %d", rgb.width(), rgb.height()));
-
-
-            new Worker(this, rgb).start();
-        }
-    }
 
 }
