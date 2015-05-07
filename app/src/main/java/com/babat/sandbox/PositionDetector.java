@@ -24,22 +24,6 @@ public class PositionDetector implements SensorEventListener {
     private float[] fixedRotation;
 
 
-    public static PositionDetector getInstance(Context myContext)
-    {
-        if (instance == null) {
-            instance = new PositionDetector(myContext);
-        }
-        return instance;
-    }
-
-    public void enableDetector() {
-        mSensorManager.registerListener(this, mRotationSensor, SENSOR_DELAY);
-    }
-
-    public void disableDetector() {
-        mSensorManager.unregisterListener(this);
-    }
-
     private PositionDetector(Context myContext) {
         Log.d(TAG, "Initializing motion sensors");
         context = (MainActivity) myContext;
@@ -48,25 +32,23 @@ public class PositionDetector implements SensorEventListener {
     }
 
 
-    @Override
-    public void onAccuracyChanged(Sensor sensor, int accuracy) {
-        // TODO Auto-generated method stub
-    }
-
-
-    @Override
-    public void onSensorChanged(SensorEvent event) {
-        if (event.sensor == mRotationSensor) {
-            if (event.values.length > 4) {
-                float[] truncatedRotationVector = new float[4];
-                System.arraycopy(event.values, 0, truncatedRotationVector, 0, 4);
-                update(truncatedRotationVector);
-            } else {
-                update(event.values);
-            }
+    public static PositionDetector getInstance(Context myContext)
+    {
+        if (instance == null) {
+            instance = new PositionDetector(myContext);
         }
+        return instance;
     }
 
+    public void enableDetector()
+    {
+        mSensorManager.registerListener(this, mRotationSensor, SENSOR_DELAY);
+    }
+
+    public void disableDetector()
+    {
+        mSensorManager.unregisterListener(this);
+    }
 
     public void fix() {
         fixedRotation = currentRotation;
@@ -82,6 +64,25 @@ public class PositionDetector implements SensorEventListener {
         SensorManager.getRotationMatrixFromVector(rotationMatrix, delta);
         return rotationMatrix;
     }
+
+    @Override
+    public void onAccuracyChanged(Sensor sensor, int accuracy) {
+        // TODO Auto-generated method stub
+    }
+
+    @Override
+    public void onSensorChanged(SensorEvent event) {
+        if (event.sensor == mRotationSensor) {
+            if (event.values.length > 4) {
+                float[] truncatedRotationVector = new float[4];
+                System.arraycopy(event.values, 0, truncatedRotationVector, 0, 4);
+                update(truncatedRotationVector);
+            } else {
+                update(event.values);
+            }
+        }
+    }
+
 
 
     private void update(float[] vectors) {

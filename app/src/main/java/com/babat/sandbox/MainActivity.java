@@ -3,22 +3,21 @@ package com.babat.sandbox;
 import org.opencv.android.BaseLoaderCallback;
 import org.opencv.android.LoaderCallbackInterface;
 import org.opencv.android.OpenCVLoader;
+import org.opencv.calib3d.Calib3d;
 import org.opencv.core.Core;
 import org.opencv.core.CvType;
 import org.opencv.core.Mat;
-import org.opencv.core.MatOfPoint2f;
 
 import android.app.Activity;
 import android.opengl.Matrix;
 import android.os.Bundle;
 import android.util.Log;
-import android.view.View;
 import android.view.WindowManager;
 
 import com.babat.sandbox.graphics.MainGLSurfaceView;
 import com.babat.sandbox.graphics.Vector3D;
 
-public class MainActivity extends Activity implements CameraView.CameraViewListener {
+public class MainActivity extends Activity implements CameraPositionListener {
 
     protected static final String TAG = "SandBox";
 
@@ -26,7 +25,6 @@ public class MainActivity extends Activity implements CameraView.CameraViewListe
     private CameraView mCameraView;
 
     private SceneDetector sceneDetector;
-    private PositionDetector positionDetector;
 
 
     //ACTIVITY
@@ -47,8 +45,6 @@ public class MainActivity extends Activity implements CameraView.CameraViewListe
 
 //        mCameraView.setVisibility(View.GONE);
 
-        positionDetector = PositionDetector.getInstance(this);
-
         OpenCVLoader.initAsync(OpenCVLoader.OPENCV_VERSION_2_4_9, this, mLoaderCallback);
     }
 
@@ -60,7 +56,9 @@ public class MainActivity extends Activity implements CameraView.CameraViewListe
         if (mCameraView != null) {
             mCameraView.enableView();
         }
-        positionDetector.enableDetector();
+        if (sceneDetector != null) {
+            sceneDetector.enableDetector();
+        }
     }
 
 
@@ -71,36 +69,31 @@ public class MainActivity extends Activity implements CameraView.CameraViewListe
         if (mCameraView != null) {
             mCameraView.disableView();
         }
-        positionDetector.disableDetector();
+        if (sceneDetector != null) {
+            sceneDetector.disableDetector();
+        }
     }
 
 
     @Override
-    public void onDestroy()
-    {
+    public void onDestroy() {
         super.onDestroy();
         if (mCameraView != null) {
             mCameraView.disableView();
         }
-        positionDetector.disableDetector();
+        if (sceneDetector != null) {
+            sceneDetector.disableDetector();
+        }
     }
 
 
-    public void onCameraFrame(byte[] data)
+    public void onCameraMoved(Mat rvec, Mat tvec)
     {
-        positionDetector.fix();
-        sceneDetector.compute(data);
-    }
+        Mat rodr = new Mat();
+        Calib3d.Rodrigues(rvec, rodr);
 
-
-    //RENDERING
-    void render(Mat rodr, Mat rvec, Mat tvec, MatOfPoint2f axisPoints)
-    {
         Mat rtrans = new Mat();
         Mat cam = new Mat();
-
-        logMatrix("axis points", axisPoints);
-
 
         Core.transpose(rodr, rtrans);
 
@@ -180,15 +173,6 @@ public class MainActivity extends Activity implements CameraView.CameraViewListe
         mGraphicsView.startRendering(eye, lookAt, up);
     }
 
-    public void logMatrix(String s, Mat m) {
-        for (int rIdx = 0; rIdx < m.rows(); rIdx++) {
-            for (int cIdx = 0; cIdx < m.cols(); cIdx++) {
-                double[] val = m.get(rIdx, cIdx);
-                Log.d(TAG, String.format(s+" [%d %d] = %f %f", rIdx, cIdx, val[0], val[1]));
-            }
-        }
-    }
-
 
     private BaseLoaderCallback mLoaderCallback = new BaseLoaderCallback(this) {
         @Override
@@ -198,7 +182,8 @@ public class MainActivity extends Activity implements CameraView.CameraViewListe
                 case LoaderCallbackInterface.SUCCESS: {
                     Log.d(TAG, "OpenCV loaded successfully");
                     sceneDetector = SceneDetector.getInstance(this.mAppContext);
-                    mCameraView.addCameraViewListener((CameraView.CameraViewListener) this.mAppContext);
+                    sceneDetector.addCameraPositionListener((CameraPositionListener) this.mAppContext);
+                    mCameraView.addCameraViewListener((CameraView.CameraViewListener) sceneDetector);
                 } break;
                 default: {
                     super.onManagerConnected(status);
@@ -206,5 +191,20 @@ public class MainActivity extends Activity implements CameraView.CameraViewListe
             }
         }
     };
+
+
+
+    //DEBUG
+
+    public void logMatrix(String s, Mat m)
+    {
+        for (int rIdx = 0; rIdx < m.rows(); rIdx++) {
+            for (int cIdx = 0; cIdx < m.cols(); cIdx++) {
+                double[] val = m.get(rIdx, cIdx);
+                Log.d(TAG, String.format(s+" [%d %d] = %f %f", rIdx, cIdx, val[0], val[1]));
+            }
+        }
+    }
+
 
 }

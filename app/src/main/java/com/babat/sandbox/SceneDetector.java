@@ -18,7 +18,6 @@ import org.opencv.features2d.DescriptorMatcher;
 import org.opencv.features2d.FeatureDetector;
 import org.opencv.features2d.KeyPoint;
 import org.opencv.imgproc.Imgproc;
-import org.opencv.core.Core;
 
 import android.content.Context;
 import android.graphics.Bitmap;
@@ -34,13 +33,16 @@ import java.util.List;
 import java.util.Map;
 
 
-public class SceneDetector {
+public class SceneDetector implements CameraView.CameraViewListener {
 
     protected static final String TAG = "SceneDetector";
 
     private static SceneDetector instance;
 
     private MainActivity context;
+    private PositionDetector positionDetector;
+
+    private CameraPositionListener cpListener;
 
     private boolean busy = false;
     private boolean detected = false;
@@ -53,28 +55,16 @@ public class SceneDetector {
     private MatOfKeyPoint crossKeypoints = new MatOfKeyPoint();
     private Mat crossDescriptors = new Mat();
 
-
-    public static SceneDetector getInstance(Context myContext)
-    {
-        if (instance == null) {
-            instance = new SceneDetector(myContext);
-        }
-        return instance;
-    }
-
-    public synchronized void compute(byte[] data) {
-        if (!detected && !busy) {
-            busy = true;
-            DetectWorker dWorker = new DetectWorker(data);
-            dWorker.start();
-        }
-    }
-
+    private Mat rvec;
+    private Mat tvec;
 
 
     private SceneDetector(Context myContext)
     {
         context = (MainActivity) myContext;
+
+        positionDetector = PositionDetector.getInstance(myContext);
+
         detector = FeatureDetector.create(FeatureDetector.ORB);
         extractor = DescriptorExtractor.create(DescriptorExtractor.ORB);
         matcher = DescriptorMatcher.create(DescriptorMatcher.BRUTEFORCE_HAMMING);
@@ -87,6 +77,53 @@ public class SceneDetector {
             extractor.compute(crossMat, crossKeypoints, crossDescriptors);
         } catch(IOException e) {
             e.printStackTrace(); //TODO: Crash!!!
+        }
+    }
+
+
+    public static SceneDetector getInstance(Context myContext)
+    {
+        if (instance == null) {
+            instance = new SceneDetector(myContext);
+        }
+        return instance;
+    }
+
+    public void enableDetector()
+    {
+        positionDetector.enableDetector();
+    }
+
+    public void disableDetector()
+    {
+        positionDetector.disableDetector();
+    }
+
+    public void addCameraPositionListener(CameraPositionListener cameraPositionListener)
+    {
+        cpListener = cameraPositionListener;
+    }
+
+
+    public synchronized void onCameraFrame(byte[] data)
+    {
+        if (detected) { //listen to position detector
+
+            float[] changes = positionDetector.change();
+
+
+
+
+            if (cpListener != null) {
+                cpListener.onCameraMoved(rvec, tvec);
+            }
+        } else { //detect the scene first
+            if (!busy) {
+                positionDetector.fix();
+                busy = true;
+                DetectWorker dWorker = new DetectWorker(data);
+                dWorker.start();
+            }
         }
     }
 
@@ -151,7 +188,7 @@ public class SceneDetector {
                 }
 
                 if (resList.size() == 4) {
-//                    detected = true;
+                    detected = true;
                     calibrate(image, resList);
                 }
             }
@@ -220,14 +257,14 @@ public class SceneDetector {
                 imagePnts[mIdx] = new Point(pnt.x, pnt.y);
             }
 
-            //Debug
-            for (int tIdx = 0; tIdx < 4; tIdx++) {
-                Log.d(TAG,  String.format("Corner %d :: [%f %f] => [%f %f]", tIdx,
-                        objectPnts[tIdx].x,
-                        objectPnts[tIdx].y,
-                        imagePnts[tIdx].x,
-                        imagePnts[tIdx].y));
-            }
+//            //Debug
+//            for (int tIdx = 0; tIdx < 4; tIdx++) {
+//                Log.d(TAG,  String.format("Corner %d :: [%f %f] => [%f %f]", tIdx,
+//                        objectPnts[tIdx].x,
+//                        objectPnts[tIdx].y,
+//                        imagePnts[tIdx].x,
+//                        imagePnts[tIdx].y));
+//            }
 
             MatOfPoint3f objectPointView = new MatOfPoint3f();
             objectPointView.fromArray(objectPnts);
@@ -235,50 +272,10 @@ public class SceneDetector {
             imagePointView.fromArray(imagePnts);
 
 
-
-
-
             //Output arrays
-            Mat rvec = new Mat();
-            Mat tvec = new Mat();
+            rvec = new Mat();
+            tvec = new Mat();
             Calib3d.solvePnP(objectPointView, imagePointView, cameraMatrix, distCoefs, rvec, tvec);
-
-            Mat rodr = new Mat();
-            Calib3d.Rodrigues(rvec, rodr);
-
-
-            //Debug
-            for (int rIdx = 0; rIdx < cameraMatrix.rows(); rIdx++) {
-                for (int cIdx = 0; cIdx < cameraMatrix.cols(); cIdx++) {
-                    double[] val = cameraMatrix.get(rIdx, cIdx);
-                    Log.d(TAG, String.format("Camera view matrix [%d %d] = %f", rIdx, cIdx, val[0]));
-                }
-            }
-            for (int rIdx = 0; rIdx < tvec.rows(); rIdx++) {
-                for (int cIdx = 0; cIdx < tvec.cols(); cIdx++) {
-                    double[] val = tvec.get(rIdx, cIdx);
-                    Log.d(TAG, String.format("tvec matrix [%d %d] = %f", rIdx, cIdx, val[0]));
-                }
-            }
-            for (int rIdx = 0; rIdx < rodr.rows(); rIdx++) {
-                for (int cIdx = 0; cIdx < rodr.cols(); cIdx++) {
-                    double[] val = rodr.get(rIdx, cIdx);
-                    Log.d(TAG, String.format("Rodrigues matrix [%d %d] = %f", rIdx, cIdx, val[0]));
-                }
-            }
-
-            MatOfPoint3f axisReal = new MatOfPoint3f(
-                    new Point3(0, 0, 0),
-                    new Point3(2, 0, 0),
-                    new Point3(0, 2, 0),
-                    new Point3(0, 0, 2));
-            MatOfPoint2f axis = new MatOfPoint2f();
-
-            Calib3d.projectPoints(axisReal, rvec, tvec, cameraMatrix, distCoefs, axis);
-
-
-            //Render the box
-            context.render(rodr, rvec, tvec, axis);
         }
 
     };
