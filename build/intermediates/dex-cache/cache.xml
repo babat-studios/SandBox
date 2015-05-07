@@ -2,18 +2,18 @@
 <items version="2" >
 
     <item
-        jar="/ssd/projects/babat/SandBox/app/build/intermediates/exploded-aar/SandBox/openCVLibrary2410/unspecified/jars/classes.jar"
-        jumboMode="false"
-        revision="22.0.1"
-        sha1="5f1f67fe397db08baaa2518a850d92f33071971e">
-        <dex dex="/ssd/projects/babat/SandBox/app/build/intermediates/pre-dexed/debug/classes-b42c3cc24fa4a044394216f222f43d1396b36eb2.jar" />
-    </item>
-    <item
         jar="/ssd/projects/babat/SandBox/app/build/intermediates/exploded-aar/com.android.support/support-v4/22.1.1/jars/classes.jar"
         jumboMode="false"
         revision="22.0.1"
         sha1="c95ba8152923e4872e86a82cfcba9a51c0214328">
         <dex dex="/ssd/projects/babat/SandBox/app/build/intermediates/pre-dexed/debug/classes-bbef2b22c61ae2b780aff87ad57e79972d1adb8e.jar" />
+    </item>
+    <item
+        jar="/ssd/projects/babat/SandBox/app/build/intermediates/exploded-aar/SandBox/openCVLibrary2410/unspecified/jars/classes.jar"
+        jumboMode="false"
+        revision="22.0.1"
+        sha1="e21fa2319c3d2e5d2ad2e40770111abec27bbea9">
+        <dex dex="/ssd/projects/babat/SandBox/app/build/intermediates/pre-dexed/debug/classes-b42c3cc24fa4a044394216f222f43d1396b36eb2.jar" />
     </item>
     <item
         jar="/ssd/projects/babat/SandBox/app/build/intermediates/exploded-aar/com.android.support/support-v4/22.1.1/jars/libs/internal_impl-22.1.1.jar"

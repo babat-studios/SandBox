@@ -29,7 +29,7 @@ import java.util.List;
 import java.util.Map;
 
 
-public class SceneDetector implements CameraView.CameraViewListener {
+public class SceneDetector {
 
     protected static final String TAG = "SceneDetector";
 
@@ -57,15 +57,14 @@ public class SceneDetector implements CameraView.CameraViewListener {
         return instance;
     }
 
-
-    public synchronized void onCameraFrame(byte[] data)
-    {
+    public synchronized void compute(byte[] data) {
         if (!detected && !busy) {
             busy = true;
             DetectWorker dWorker = new DetectWorker(this, data);
             dWorker.start();
         }
     }
+
 
 
     private SceneDetector(Context myContext)

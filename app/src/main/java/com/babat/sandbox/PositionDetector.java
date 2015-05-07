@@ -20,6 +20,9 @@ public class PositionDetector implements SensorEventListener {
     private SensorManager mSensorManager;
     private Sensor mRotationSensor;
 
+    private float[] currentRotation;
+    private float[] fixedRotation;
+
 
     public static PositionDetector getInstance(Context myContext)
     {
@@ -65,8 +68,26 @@ public class PositionDetector implements SensorEventListener {
     }
 
 
+    public void fix() {
+        fixedRotation = currentRotation;
+    }
+
+
+    public float[] change() {
+        float[] delta = new float[3];
+        delta[0] = currentRotation[0] - fixedRotation[0];
+        delta[1] = currentRotation[1] - fixedRotation[1];
+        delta[2] = currentRotation[2] - fixedRotation[2];
+        float[] rotationMatrix = new float[16];
+        SensorManager.getRotationMatrixFromVector(rotationMatrix, delta);
+        return rotationMatrix;
+    }
+
+
     private void update(float[] vectors) {
-//        float[] rotationMatrix = new float[9];
+        currentRotation = vectors;
+        Log.d(TAG, String.format("%f, %f, %f", vectors[0], vectors[1], vectors[2]));
+//        float[] rotationMatrix = new float[16];
 //        SensorManager.getRotationMatrixFromVector(rotationMatrix, vectors);
 //        int worldAxisX = SensorManager.AXIS_X;
 //        int worldAxisZ = SensorManager.AXIS_Z;
@@ -76,7 +97,6 @@ public class PositionDetector implements SensorEventListener {
 //        SensorManager.getOrientation(adjustedRotationMatrix, orientation);
 //        float pitch = orientation[1] * FROM_RADS_TO_DEGS;
 //        float roll = orientation[2] * FROM_RADS_TO_DEGS;
-        Log.d(TAG, String.format("%f, %f, %f", vectors[0], vectors[1], vectors[2]));
     }
 
 }

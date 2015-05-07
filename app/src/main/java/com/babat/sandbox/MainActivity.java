@@ -11,7 +11,7 @@ import android.util.Log;
 import android.view.WindowManager;
 
 
-public class MainActivity extends Activity {
+public class MainActivity extends Activity implements CameraView.CameraViewListener {
 
     protected static final String TAG = "SandBox";
 
@@ -71,6 +71,13 @@ public class MainActivity extends Activity {
     }
 
 
+    public void onCameraFrame(byte[] data)
+    {
+        positionDetector.fix();
+        sceneDetector.compute(data);
+    }
+
+
     //RENDERING
     void render(Mat rvec, Mat tvec)
     {
@@ -86,7 +93,7 @@ public class MainActivity extends Activity {
                 case LoaderCallbackInterface.SUCCESS: {
                     Log.d(TAG, "OpenCV loaded successfully");
                     sceneDetector = SceneDetector.getInstance(this.mAppContext);
-                    mCameraView.addCameraViewListener(sceneDetector);
+                    mCameraView.addCameraViewListener((CameraView.CameraViewListener) this.mAppContext);
                 } break;
                 default: {
                     super.onManagerConnected(status);
