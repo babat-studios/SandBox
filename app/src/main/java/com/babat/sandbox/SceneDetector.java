@@ -152,7 +152,7 @@ public class SceneDetector implements CameraView.CameraViewListener {
                 }
 
                 if (resList.size() == 4) {
-                    detected = true;
+//                    detected = true;
                     calibrate(image, resList);
                 }
             }
@@ -207,18 +207,27 @@ public class SceneDetector implements CameraView.CameraViewListener {
                 int mIdx; //clockwise
                 if (xIdx < 2 && yIdx < 2) { //top left
                     mIdx = 3;
-                    objectPnts[mIdx] = new Point3(-1, -1, 0);
+                    objectPnts[mIdx] = new Point3(-1, 1, 0);
                 } else if (xIdx >= 2 && yIdx < 2) { //top right
                     mIdx = 0;
-                    objectPnts[mIdx] = new Point3(1, -1, 0);
+                    objectPnts[mIdx] = new Point3(1, 1, 0);
                 } else if (xIdx >= 2 && yIdx >= 2) { //bottom right
                     mIdx = 1;
-                    objectPnts[mIdx] = new Point3(1, 1, 0);
+                    objectPnts[mIdx] = new Point3(1, -1, 0);
                 } else { //bottom left
                     mIdx = 2;
-                    objectPnts[mIdx] = new Point3(-1, 1, 0);
+                    objectPnts[mIdx] = new Point3(-1, -1, 0);
                 }
                 imagePnts[mIdx] = new Point(pnt.x, pnt.y);
+            }
+
+            //Debug
+            for (int tIdx = 0; tIdx < 4; tIdx++) {
+                Log.d(TAG,  String.format("Corner %d :: [%f %f] => [%f %f]", tIdx,
+                        objectPnts[tIdx].x,
+                        objectPnts[tIdx].y,
+                        imagePnts[tIdx].x,
+                        imagePnts[tIdx].y));
             }
 
             MatOfPoint3f objectPointView = new MatOfPoint3f();
@@ -227,14 +236,7 @@ public class SceneDetector implements CameraView.CameraViewListener {
             imagePointView.fromArray(imagePnts);
 
 
-            //Debug
-            for (int tIdx = 0; tIdx < 4; tIdx++) {
-                Log.d(TAG,  String.format("Corner %d :: [%f %f] => [%f %f]", tIdx,
-                        objectPointView.get(tIdx,0)[0],
-                        objectPointView.get(tIdx,0)[1],
-                        imagePointView.get(tIdx,0)[0],
-                        imagePointView.get(tIdx,0)[1]));
-            }
+
 
 
             //Output arrays
@@ -266,9 +268,18 @@ public class SceneDetector implements CameraView.CameraViewListener {
                 }
             }
 
+            MatOfPoint3f axisReal = new MatOfPoint3f(
+                    new Point3(0, 0, 0),
+                    new Point3(2, 0, 0),
+                    new Point3(0, 2, 0),
+                    new Point3(0, 0, 2));
+            MatOfPoint2f axis = new MatOfPoint2f();
+
+            Calib3d.projectPoints(axisReal, rvec, tvec, cameraMatrix, distCoefs, axis);
+
 
             //Render the box
-            context.render(rodr, rvec, tvec);
+            context.render(rodr, rvec, tvec, axis);
         }
 
     };

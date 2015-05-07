@@ -11,7 +11,7 @@ import android.util.Log;
  */
 public class MainGLSurfaceView extends GLSurfaceView {
 
-    private final MainGLRenderer mRenderer;
+    public final MainGLRenderer mRenderer;
 
     public MainGLSurfaceView(Context context, AttributeSet attrs){
         super(context, attrs);
@@ -24,10 +24,13 @@ public class MainGLSurfaceView extends GLSurfaceView {
         setRenderer(mRenderer);
     }
 
-    public void startRendering(Vector3D rotation, Vector3D translation) {
+    public void startRendering(Vector3D eye, Vector3D lookAt, Vector3D up) {
         mRenderer.mIsCalibrated = true;
-        mRenderer.mCamera.eye = translation;
-        mRenderer.mCamera.lookAt = new Vector3D(0.0f, 0.0f, 0.0f);
-        Log.d("CALIB", String.format("Eye = %f %f %f", translation.x, translation.y, translation.z));
+        mRenderer.mCamera.eye = eye;
+        mRenderer.mCamera.lookAt = lookAt;
+        mRenderer.mCamera.up = up;
+
+        Log.d("CALIB", String.format("eye    = %f %f %f", eye.x, eye.y, eye.z));
+        Log.d("CALIB", String.format("lookAt = %f %f %f", lookAt.x, lookAt.y, lookAt.z));
     }
 }

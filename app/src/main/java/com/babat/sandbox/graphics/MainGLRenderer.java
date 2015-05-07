@@ -3,7 +3,10 @@ package com.babat.sandbox.graphics;
 import android.content.Context;
 import android.opengl.GLES20;
 import android.opengl.GLSurfaceView;
+import android.opengl.Matrix;
 import android.util.Log;
+
+import org.opencv.core.Mat;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -21,14 +24,17 @@ import javax.microedition.khronos.opengles.GL10;
 public class MainGLRenderer implements GLSurfaceView.Renderer {
     private Context mContext;
 
+    private Gnomon mGnomon = new Gnomon();
     private Cube mCube = new Cube();
     public Camera mCamera = new Camera();
 
     public float[] mView = new float[16];
     public float[] mProj = new float[16];
 
-    private int mProgram;
-    public boolean mIsCalibrated = false;
+    private int mGnomonShader;
+    private int mWorldShader;
+
+    public boolean mIsCalibrated = true;
 
     public MainGLRenderer(Context context) { mContext = context; }
 
@@ -36,19 +42,31 @@ public class MainGLRenderer implements GLSurfaceView.Renderer {
         GLES20.glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
         GLES20.glEnable(GLES20.GL_DEPTH_TEST);
 
-        int vertexShader = loadShader(GLES20.GL_VERTEX_SHADER, "shader.vert");
-        int fragmentShader = loadShader(GLES20.GL_FRAGMENT_SHADER, "shader.frag");
+        int vertexShader = loadShader(GLES20.GL_VERTEX_SHADER, "world.vert");
+        int fragmentShader = loadShader(GLES20.GL_FRAGMENT_SHADER, "world.frag");
 
-        mProgram = GLES20.glCreateProgram();
-        GLES20.glAttachShader(mProgram, vertexShader);
-        GLES20.glAttachShader(mProgram, fragmentShader);
-        GLES20.glLinkProgram(mProgram);
+        mWorldShader = GLES20.glCreateProgram();
+        GLES20.glAttachShader(mWorldShader, vertexShader);
+        GLES20.glAttachShader(mWorldShader, fragmentShader);
+        GLES20.glLinkProgram(mWorldShader);
 
-        Log.d("Shader:", String.valueOf(GLES20.glGetShaderInfoLog(vertexShader)));
-        Log.d("Shader:", String.valueOf(GLES20.glGetShaderInfoLog(fragmentShader)));
-        Log.d("Shader:", String.valueOf(GLES20.glGetProgramInfoLog(mProgram)));
+        Log.d("World Shader:", String.valueOf(GLES20.glGetShaderInfoLog(vertexShader)));
+        Log.d("World Shader:", String.valueOf(GLES20.glGetShaderInfoLog(fragmentShader)));
+        Log.d("World Shader:", String.valueOf(GLES20.glGetProgramInfoLog(mWorldShader)));
 
-        mCamera.eye = new Vector3D(7.5f, -6.5f, 5.35f);
+        vertexShader = loadShader(GLES20.GL_VERTEX_SHADER, "gnomon.vert");
+        fragmentShader = loadShader(GLES20.GL_FRAGMENT_SHADER, "gnomon.frag");
+
+        mGnomonShader = GLES20.glCreateProgram();
+        GLES20.glAttachShader(mGnomonShader, vertexShader);
+        GLES20.glAttachShader(mGnomonShader, fragmentShader);
+        GLES20.glLinkProgram(mGnomonShader);
+
+        Log.d("Gnomon Shader:", String.valueOf(GLES20.glGetShaderInfoLog(vertexShader)));
+        Log.d("Gnomon Shader:", String.valueOf(GLES20.glGetShaderInfoLog(fragmentShader)));
+        Log.d("Gnomon Shader:", String.valueOf(GLES20.glGetProgramInfoLog(mGnomonShader)));
+
+        mCamera.eye = new Vector3D(5.0f, 5.0f, 5.0f);
         mCamera.lookAt = new Vector3D(0.0f, 0.0f, 0.0f);
         mCamera.up = new Vector3D(0.0f, 0.0f, 0.1f);
         mCamera.fov = 60;
@@ -66,13 +84,22 @@ public class MainGLRenderer implements GLSurfaceView.Renderer {
     public void onDrawFrame(GL10 unused) {
         GLES20.glClearDepthf(1.0f);
         GLES20.glClear(GLES20.GL_COLOR_BUFFER_BIT | GLES20.GL_DEPTH_BUFFER_BIT);
-        GLES20.glUseProgram(mProgram);
 
-        if (mIsCalibrated) {
-            mCamera.view(mView);
-            mCamera.perspective(mProj);
-            mCube.draw(this);
-        }
+        if (!mIsCalibrated)
+            return;
+
+        mCamera.view(mView);
+        mCamera.perspective(mProj);
+
+        GLES20.glUseProgram(mWorldShader);
+        mCube.draw(this);
+
+        GLES20.glUseProgram(mGnomonShader);
+        float[] viewProj = new float[16];
+        Matrix.multiplyMM(viewProj, 0, mProj, 0, mView, 0);
+//        Matrix.setIdentityM(viewProj, 0);
+//        mGnomon.draw(mGnomonShader, mProj);
+        mGnomon.draw(mGnomonShader, viewProj);
     }
 
     public void onSurfaceChanged(GL10 unused, int width, int height) {
@@ -108,5 +135,5 @@ public class MainGLRenderer implements GLSurfaceView.Renderer {
         return shader;
     }
 
-    public int getProgram() { return mProgram; }
+    public int getProgram() { return mWorldShader; }
 }

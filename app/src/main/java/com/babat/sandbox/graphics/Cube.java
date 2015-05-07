@@ -183,8 +183,11 @@ public class Cube {
         mNormalBuffer.position(0);
 
         float[] rot = new float[16];
-        Matrix.setIdentityM(rot, 0);
-        Matrix.rotateM(rot, 0, mAngle, 0.0f, 0.0f, 1.0f);
+        float[] model = new float[16];
+        Matrix.setIdentityM(model, 0);
+//        Matrix.rotateM(rot, 0, mAngle, 0.0f, 0.0f, 1.0f);
+        Matrix.translateM(model, 0, 0.0f, 0.0f, 0.0f);
+        Matrix.scaleM(model, 0, 0.5f, 0.5f, 0.5f);
 
         float[] vpMatrix = new float[16];
         Matrix.multiplyMM(vpMatrix, 0, renderer.mProj, 0, renderer.mView, 0);
@@ -192,7 +195,7 @@ public class Cube {
         float[] mvpMatrix = new float[16];
         float[] inverseMatrix = new float[16];
         float[] normalMatrix = new float[16];
-        Matrix.multiplyMM(mvpMatrix, 0, vpMatrix, 0, rot, 0);
+        Matrix.multiplyMM(mvpMatrix, 0, vpMatrix, 0, model, 0);
         Matrix.invertM(inverseMatrix, 0, mvpMatrix, 0);
         Matrix.transposeM(normalMatrix, 0, inverseMatrix, 0);
 
@@ -200,12 +203,12 @@ public class Cube {
         GLES20.glUniformMatrix4fv(vpHandle, 1, false, vpMatrix, 0);
 
         int mHandle = GLES20.glGetUniformLocation(renderer.getProgram(), "gModelMatrix");
-        GLES20.glUniformMatrix4fv(mHandle, 1, false, rot, 0);
+        GLES20.glUniformMatrix4fv(mHandle, 1, false, model, 0);
 
         int nHandle = GLES20.glGetUniformLocation(renderer.getProgram(), "gNormalMatrix");
         GLES20.glUniformMatrix4fv(nHandle, 1, false, normalMatrix, 0);
 
-        float lightPos[] = { 4.0f, 1.0f, 6.0f, 1.0f };
+        float lightPos[] = { renderer.mCamera.eye.x, renderer.mCamera.eye.y, renderer.mCamera.eye.z, 1.0f };
         int lightHandle = GLES20.glGetUniformLocation(renderer.getProgram(), "gLightPosition");
         GLES20.glUniform4fv(lightHandle, 1, lightPos, 0);
 

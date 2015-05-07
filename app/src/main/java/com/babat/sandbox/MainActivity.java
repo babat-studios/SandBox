@@ -4,11 +4,15 @@ import org.opencv.android.BaseLoaderCallback;
 import org.opencv.android.LoaderCallbackInterface;
 import org.opencv.android.OpenCVLoader;
 import org.opencv.core.Core;
+import org.opencv.core.CvType;
 import org.opencv.core.Mat;
+import org.opencv.core.MatOfPoint2f;
 
 import android.app.Activity;
+import android.opengl.Matrix;
 import android.os.Bundle;
 import android.util.Log;
+import android.view.View;
 import android.view.WindowManager;
 
 import com.babat.sandbox.graphics.MainGLSurfaceView;
@@ -39,6 +43,8 @@ public class MainActivity extends Activity {
 
         mCameraView.setZOrderOnTop(false);
         mGraphicsView.setZOrderOnTop(true);
+
+//        mCameraView.setVisibility(View.GONE);
 
         OpenCVLoader.initAsync(OpenCVLoader.OPENCV_VERSION_2_4_9, this, mLoaderCallback);
     }
@@ -75,28 +81,99 @@ public class MainActivity extends Activity {
 
 
     //RENDERING
-    void render(Mat rodr, Mat rvec, Mat tvec)
+    void render(Mat rodr, Mat rvec, Mat tvec, MatOfPoint2f axisPoints)
     {
         Mat rtrans = new Mat();
         Mat cam = new Mat();
 
-        Core.transpose(rodr, rtrans);
+        logMatrix("axis points", axisPoints);
 
-        Vector3D rotation = new Vector3D(
-            (float) rvec.get(0, 0)[0],
-            (float) rvec.get(1, 0)[0],
-            (float) rvec.get(2, 0)[0]
-        );
+
+        Core.transpose(rodr, rtrans);
 
         Core.gemm(rtrans, tvec, 1, tvec, 0, cam);
 
-        Vector3D translation = new Vector3D(
-            (float) cam.get(0, 0)[0],
-            (float) cam.get(1, 0)[0],
-            (float) cam.get(2, 0)[0]
-        );
+        double[] buf = new double[1];
 
-        mGraphicsView.startRendering(rotation, translation);
+        Mat view = Mat.zeros(4, 4, CvType.CV_64F);
+        for (int row=0; row<3; row++) {
+            for (int col=0; col<3; col++) {
+                buf[0] = rodr.get(row, col)[0];
+                view.put(row, col, buf);
+            }
+
+            buf[0] = tvec.get(row, 0)[0];
+            view.put(row, 3, buf);
+        }
+
+        buf[0] = 1;
+        view.put(3, 3, buf);
+
+        //logMatrix("Initial cv view", view);
+
+        Mat inv = Mat.zeros(4, 4, CvType.CV_64F);
+
+        buf[0] = 1;
+        inv.put(0, 0, buf);
+        inv.put(3, 3, buf);
+
+        buf[0] = -1;
+        inv.put(1, 1, buf);
+        inv.put(2, 2, buf);
+
+        Mat viewNew = Mat.zeros(4, 4, CvType.CV_64F);
+        Core.gemm(inv, view, 1, tvec, 0, viewNew);
+
+        //logMatrix("Axis inverted view", viewNew);
+
+        for (int col=0; col<4; col++) {
+            for (int row=0; row<4; row++) {
+                mGraphicsView.mRenderer.mCamera.mView[col*4+row] = (float) viewNew.get(row, col)[0];
+            }
+        }
+
+        float[] inverseView = new float[16];
+        Matrix.invertM(inverseView, 0, mGraphicsView.mRenderer.mCamera.mView, 0);
+
+        float[] eyeInViewSpace = {0.0f, 0.0f, 0.0f, 1.0f};
+        float[] lookAtInViewSpace = {0.0f, 0.0f, -1.0f, 1.0f};
+        float[] upInViewSpace = {0.0f, 1.0f, 0.0f, 1.0f};
+
+        float[] eyeInWorldSpace = new float[4];
+        float[] lookAtInWorldSpace = new float[4];
+        float[] upInWorldSpace = new float[4];
+
+        Matrix.multiplyMV(eyeInWorldSpace, 0, inverseView, 0, eyeInViewSpace, 0);
+        Matrix.multiplyMV(lookAtInWorldSpace, 0, inverseView, 0, lookAtInViewSpace, 0);
+        Matrix.multiplyMV(upInWorldSpace, 0, inverseView, 0, upInViewSpace, 0);
+
+        Log.d("Correct eye:", String.format("%f %f %f", eyeInWorldSpace[0], eyeInWorldSpace[1], eyeInWorldSpace[2]));
+        Log.d("Correct lookAt:", String.format("%f %f %f", lookAtInWorldSpace[0], lookAtInWorldSpace[1], lookAtInWorldSpace[2]));
+
+        Mat viewTrans = Mat.zeros(4, 4, CvType.CV_64F);
+        Core.transpose(viewNew, viewTrans);
+
+        //logMatrix("Transposed view", viewTrans);
+
+        Mat viewInv = Mat.zeros(4, 4, CvType.CV_64F);
+        Core.invert(viewTrans, viewInv);
+
+        //logMatrix("Inverted view", viewInv);
+
+        Vector3D eye = new Vector3D(eyeInWorldSpace[0], eyeInWorldSpace[1], eyeInWorldSpace[2]);
+        Vector3D lookAt = new Vector3D(lookAtInWorldSpace[0], lookAtInWorldSpace[1], lookAtInWorldSpace[2]);
+        Vector3D up = new Vector3D(upInWorldSpace[0], upInWorldSpace[1], upInWorldSpace[2]);
+
+        mGraphicsView.startRendering(eye, lookAt, up);
+    }
+
+    public void logMatrix(String s, Mat m) {
+        for (int rIdx = 0; rIdx < m.rows(); rIdx++) {
+            for (int cIdx = 0; cIdx < m.cols(); cIdx++) {
+                double[] val = m.get(rIdx, cIdx);
+                Log.d(TAG, String.format(s+" [%d %d] = %f %f", rIdx, cIdx, val[0], val[1]));
+            }
+        }
     }
 
 
