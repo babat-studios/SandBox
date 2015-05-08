@@ -76,7 +76,8 @@ public class MainActivity extends Activity implements CameraPositionListener {
 
 
     @Override
-    public void onDestroy() {
+    public void onDestroy()
+    {
         super.onDestroy();
         if (mCameraView != null) {
             mCameraView.disableView();
@@ -87,7 +88,7 @@ public class MainActivity extends Activity implements CameraPositionListener {
     }
 
 
-    public void onCameraMoved(Mat rvec, Mat tvec)
+    public void onCameraMoved(Mat rvec, Mat tvec, Mat transf)
     {
         Mat rodr = new Mat();
         Calib3d.Rodrigues(rvec, rodr);
@@ -130,7 +131,9 @@ public class MainActivity extends Activity implements CameraPositionListener {
         Mat viewNew = Mat.zeros(4, 4, CvType.CV_64F);
         Core.gemm(inv, view, 1, tvec, 0, viewNew);
 
-        //logMatrix("Axis inverted view", viewNew);
+//        Mat newViewNew = Mat.zeros(4, 4, CvType.CV_64F);
+//        Core.gemm(transf, viewNew, 1, tvec, 0, newViewNew);
+//        viewNew = newViewNew;
 
         for (int col=0; col<4; col++) {
             for (int row=0; row<4; row++) {
@@ -201,7 +204,7 @@ public class MainActivity extends Activity implements CameraPositionListener {
         for (int rIdx = 0; rIdx < m.rows(); rIdx++) {
             for (int cIdx = 0; cIdx < m.cols(); cIdx++) {
                 double[] val = m.get(rIdx, cIdx);
-                Log.d(TAG, String.format(s+" [%d %d] = %f %f", rIdx, cIdx, val[0], val[1]));
+                Log.d(TAG, String.format(s+" [%d %d] = %f", rIdx, cIdx, val[0]));
             }
         }
     }

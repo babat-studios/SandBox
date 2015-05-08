@@ -6,6 +6,7 @@ import org.opencv.core.CvType;
 import org.opencv.core.Mat;
 import org.opencv.core.MatOfDMatch;
 import org.opencv.core.MatOfDouble;
+import org.opencv.core.MatOfFloat;
 import org.opencv.core.MatOfKeyPoint;
 import org.opencv.core.MatOfPoint3f;
 import org.opencv.core.MatOfPoint2f;
@@ -64,6 +65,7 @@ public class SceneDetector implements CameraView.CameraViewListener {
         context = (MainActivity) myContext;
 
         positionDetector = PositionDetector.getInstance(myContext);
+        positionDetector.enableDetector();
 
         detector = FeatureDetector.create(FeatureDetector.ORB);
         extractor = DescriptorExtractor.create(DescriptorExtractor.ORB);
@@ -96,6 +98,7 @@ public class SceneDetector implements CameraView.CameraViewListener {
 
     public void disableDetector()
     {
+        detected = false;
         positionDetector.disableDetector();
     }
 
@@ -105,20 +108,71 @@ public class SceneDetector implements CameraView.CameraViewListener {
     }
 
 
-    public synchronized void onCameraFrame(byte[] data)
-    {
-        if (detected) { //listen to position detector
+    public synchronized void onCameraFrame(byte[] data) {
+        if (!busy) {
+            if (detected) { //listen to position detector
+//                float[] transformation = positionDetector.change();
+//                Mat trans = new Mat(4, 4, CvType.CV_64F);
+//                for (int rIdx = 0; rIdx < 4; rIdx++) {
+//                    for (int cIdx = 0; cIdx < 4; cIdx++) {
+//                        double[] buf = new double[1];
+//                        buf[0] = (double) transformation[rIdx * 4 + cIdx];
+//                        trans.put(rIdx, cIdx, buf);
+//                    }
+//                }
 
-            float[] changes = positionDetector.change();
+                float[] angleChange = positionDetector.angleChange();
+
+                Mat temp = rvec.clone();
+
+                double[]buf = new double[1];
+                buf[0] = rvec.get(0, 0)[0] + (double)angleChange[2];
+                temp.put(0, 0, buf);
+
+                buf = new double[1];
+                buf[0] = rvec.get(1, 0)[0] -(double)angleChange[0];
+                temp.put(1,0,buf);
+
+                buf = new double[1];
+                buf[0] = rvec.get(2, 0)[0] + (double)angleChange[1];
+                temp.put(2,0,buf);
 
 
 
+                float[] pos = positionDetector.positionChange();
 
-            if (cpListener != null) {
-                cpListener.onCameraMoved(rvec, tvec);
-            }
-        } else { //detect the scene first
-            if (!busy) {
+                Mat temp2 = rvec.clone();
+
+                buf = new double[1];
+                buf[0] = tvec.get(0, 0)[0] + (double)pos[0] * 10;
+                temp2.put(0, 0, buf);
+
+                buf = new double[1];
+                buf[0] = tvec.get(1, 0)[0] -(double)pos[1] * 10;
+                temp2.put(1,0,buf);
+
+                buf = new double[1];
+                buf[0] = tvec.get(2, 0)[0] + (double)pos[2] * 10 ;
+                temp2.put(2,0,buf);
+
+
+
+                Log.d("GOOO", String.format("%f %f %f - %f %f %f - %f %f %f",
+                        tvec.get(0, 0)[0],
+                        tvec.get(1, 0)[0],
+                        tvec.get(2, 0)[0],
+                        pos[0],
+                        pos[1],
+                        pos[2],
+                        temp2.get(0, 0)[0],
+                        temp2.get(1, 0)[0],
+                        temp2.get(2, 0)[0]));
+
+
+                if (cpListener != null) {
+                    cpListener.onCameraMoved(temp, temp2, null);
+                }
+            } else { //detect the scene first
                 positionDetector.fix();
                 busy = true;
                 DetectWorker dWorker = new DetectWorker(data);
