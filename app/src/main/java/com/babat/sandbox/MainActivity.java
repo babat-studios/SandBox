@@ -88,7 +88,7 @@ public class MainActivity extends Activity implements CameraPositionListener {
     }
 
 
-    public void onCameraMoved(Mat rvec, Mat tvec, Mat transf)
+    public void onCameraMoved(Mat rvec, Mat tvec)
     {
         Mat rodr = new Mat();
         Calib3d.Rodrigues(rvec, rodr);

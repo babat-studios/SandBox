@@ -7,12 +7,18 @@ import android.hardware.SensorEventListener;
 import android.hardware.SensorManager;
 import android.util.Log;
 
+import java.util.ArrayList;
+import java.util.List;
+
+import org.apache.commons.math3.stat.descriptive.DescriptiveStatistics;
+
 
 public class PositionDetector implements SensorEventListener {
 
     protected static final String TAG = "PositionDetector";
-    private static final int SENSOR_DELAY = 41 * 1000;
+    private static final int SENSOR_DELAY = 20/1000;
     private static final int FROM_RADS_TO_DEGS = -57;
+    private static final double dt = 20/1000;
 
     private static PositionDetector instance;
 
@@ -24,10 +30,14 @@ public class PositionDetector implements SensorEventListener {
     private float[] currentRotation;
     private float[] fixedRotation;
 
+    private DescriptiveStatistics stat1 = new DescriptiveStatistics();
+    private DescriptiveStatistics stat2 = new DescriptiveStatistics();
+    private DescriptiveStatistics stat3 = new DescriptiveStatistics();
+
+
+    private long pti =  System.currentTimeMillis();
+    private float[] veli = new float[3];
     private float[] currentTranslation = new float[3];
-
-    private long timestamp =  System.currentTimeMillis();
-
 
 
     private PositionDetector(Context myContext)
@@ -65,9 +75,12 @@ public class PositionDetector implements SensorEventListener {
             fixedRotation = new float[3];
             System.arraycopy(currentRotation, 0, fixedRotation, 0, 3);
         }
-        currentTranslation[0] = 0;
-        currentTranslation[1] = 0;
-        currentTranslation[2] = 0;
+//        veli[0] = 0;
+//        veli[1] = 0;
+//        veli[2] = 0;
+//        currentTranslation[0] = 0;
+//        currentTranslation[1] = 0;
+//        currentTranslation[2] = 0;
     }
 
 
@@ -123,13 +136,27 @@ public class PositionDetector implements SensorEventListener {
     }
 
     private void updateTranslation(float[] vectors) {
-        long tTime = System.currentTimeMillis();
-        float diffSec = (tTime - timestamp)/1000.0f;
-        timestamp = tTime;
-        currentTranslation[0] += (vectors[0] * diffSec * diffSec);
-        currentTranslation[1] += (vectors[1] * diffSec * diffSec);
-        currentTranslation[2] += (vectors[2] * diffSec * diffSec);
-        //Log.d(TAG, String.format("Position %f %f %f ", currentTranslation[0], currentTranslation[1], currentTranslation[2], diffSec));
+        long ti = System.currentTimeMillis();
+        float deltaTi = (ti - pti)/1000.0f;
+        pti = ti;
+
+        stat1.addValue(vectors[0]);
+        stat2.addValue(vectors[1]);
+        stat3.addValue(vectors[2]);
+
+        vectors[0] -= stat1.getPercentile(50);
+        vectors[1] -= stat2.getPercentile(50);
+        vectors[2] -= stat3.getPercentile(50);
+
+        veli[0] = veli[0] + vectors[0] * deltaTi;
+        veli[1] = veli[1] + vectors[1] * deltaTi;
+        veli[2] = veli[2] + vectors[2] * deltaTi;
+
+        currentTranslation[0] = currentTranslation[0] + veli[0] * deltaTi + 0.5f * vectors[0] * deltaTi * deltaTi;
+        currentTranslation[1] = currentTranslation[1] + veli[1] * deltaTi + 0.5f * vectors[1] * deltaTi * deltaTi;
+        currentTranslation[2] = currentTranslation[2] + veli[2] * deltaTi + 0.5f * vectors[2] * deltaTi * deltaTi;
+
+        Log.d(TAG, String.format("Position %f %f %f %f", currentTranslation[0], veli[0], vectors[0], stat1.getPercentile(50), stat1.getStandardDeviation()));
     }
 
 }

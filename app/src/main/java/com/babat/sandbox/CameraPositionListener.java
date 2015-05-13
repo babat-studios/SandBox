@@ -8,6 +8,6 @@ import org.opencv.core.MatOfPoint2f;
  */
 public interface CameraPositionListener {
 
-    void onCameraMoved(Mat rvec, Mat tvec, Mat transformation);
+    void onCameraMoved(Mat rvec, Mat tvec);
 
 }
