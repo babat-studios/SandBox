@@ -72,7 +72,7 @@ public class MainGLRenderer implements GLSurfaceView.Renderer {
         mCamera.fov = 60;
         mCamera.aspect = 1;
 
-        mCube = new Mesh(mWorldShader);
+        mCube = new Mesh(this, mWorldShader);
 
 //        Timer timer = new Timer();
 //        timer.schedule(new TimerTask() {
@@ -145,4 +145,5 @@ public class MainGLRenderer implements GLSurfaceView.Renderer {
     }
 
     public int getProgram() { return mWorldShader; }
+    public Context getContext() { return mContext; }
 }

@@ -1,12 +1,17 @@
 package com.babat.sandbox.graphics;
 
+import android.content.Context;
 import android.opengl.GLES20;
 import android.opengl.Matrix;
 import android.util.Log;
 
-import java.nio.ByteBuffer;
-import java.nio.ByteOrder;
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.nio.FloatBuffer;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * Created by Azad on 07/05/2015.
@@ -15,6 +20,9 @@ public class Mesh {
     private static final String TAG = Mesh.class.toString();
 
     private final int mShaderProgram;
+    private final MainGLRenderer mRenderer;
+
+    private String mName;
 
     private Vector3D mTranslation;
     private Vector3D mRotation;
@@ -32,7 +40,8 @@ public class Mesh {
     private int[] mFaces;
     private int mIteration = 0;
 
-    public Mesh(int shaderProgram) {
+    public Mesh(MainGLRenderer renderer, int shaderProgram) {
+        mRenderer = renderer;
         mShaderProgram = shaderProgram;
 
         mTranslation = new Vector3D(0, 0, 0);
@@ -59,63 +68,70 @@ public class Mesh {
 
         mShininess = 0.4f * 128;
 
-        initToCube();
+        loadFromObjFile("mesh/cow.obj");
     }
 
-    private void initToCube() {
-        float[] v = {
-            1.0f  , -1.0f , -1.0f,
-            1.0f  , -1.0f ,  1.0f,
-            -1.0f , -1.0f ,  1.0f,
-            -1.0f , -1.0f , -1.0f,
-            1.0f  , 1.0f  , -1.0f,
-            1.0f  , 1.0f  , 1.0f,
-            -1.0f , 1.0f  , 1.0f,
-            -1.0f , 1.0f  , -1.0f
-        };
+    private void loadFromObjFile(String filename) {
+        List<String> lines = Utils.readFile(filename);
 
-        float[] vt = {
-        };
+        List<Float> v = new ArrayList<>();
+        List<Float> vt = new ArrayList<>();
+        List<Float> vn = new ArrayList<>();
+        List<Integer> f = new ArrayList<>();
 
-        float[] vn = {
-            0.0f  , -1.0f , 0.0f,
-            0.0f  , 1.0f  , 0.0f,
-            1.0f  , 0.0f  , 0.0f,
-            0.0f  , 0.0f  , 1.0f,
-            -1.0f , 0.0f  , 0.0f,
-            0.0f  , 0.0f  , -1.0f,
-        };
+        for (String line : lines) {
+            try {
+                if (line.substring(0, 1).compareTo("o") == 0) {
+                    mName = line.substring(2).trim();
+                }
+                else if (line.substring(0, 1).compareTo("f") == 0) {
+                    String[] coords = line.substring(2).trim().split(" ");
 
-        int[] f = {
-            2,0,1,  3,0,1,  4,0,1,
-            8,0,2,  7,0,2,  6,0,2,
-            5,0,3,  6,0,3,  2,0,3,
-            6,0,4,  7,0,4,  3,0,4,
-            3,0,5,  7,0,5,  8,0,5,
-            1,0,6,  4,0,6,  8,0,6,
-            1,0,1,  2,0,1,  4,0,1,
-            5,0,2,  8,0,2,  6,0,2,
-            1,0,3,  5,0,3,  2,0,3,
-            2,0,4,  6,0,4,  3,0,4,
-            4,0,5,  3,0,5,  8,0,5,
-            5,0,6,  1,0,6,  8,0,6,
-        };
+                    for (String coord : coords) {
+                        String[] components = coord.split("/");
 
-        initFromObjFile(v, vt, vn, f);
-    }
+                        f.add(Integer.parseInt(components[0].compareTo("") != 0 ? components[0] : "0"));
+                        f.add(Integer.parseInt(components[1].compareTo("") != 0 ? components[1] : "0"));
+                        f.add(Integer.parseInt(components[2].compareTo("") != 0 ? components[2] : "0"));
+                    }
+                }
+                else if (line.substring(0, 2).compareTo("v ") == 0) {
+                    String[] coords = line.substring(2).trim().split(" ");
 
-    private void initFromObjFile(float[] v, float[] vt, float[] vn, int[] f) {
-        mVertices = new float[v.length];
-        System.arraycopy(v, 0, mVertices, 0, v.length);
+                    v.add(Float.parseFloat(coords[0]));
+                    v.add(Float.parseFloat(coords[1]));
+                    v.add(Float.parseFloat(coords[2]));
+                }
+                else if (line.substring(0, 2).compareTo("vt") == 0) {
+                    String[] coords = line.substring(3).trim().split(" ");
 
-        mUVs = new float[vt.length];
-        System.arraycopy(vt, 0, mUVs, 0, vt.length);
+                    vt.add(Float.parseFloat(coords[0]));
+                    vt.add(Float.parseFloat(coords[1]));
+                }
+                else if (line.substring(0, 2).compareTo("vn") == 0) {
+                    String[] coords = line.substring(3).trim().split(" ");
 
-        mNormals = new float[vn.length];
-        System.arraycopy(vn, 0, mNormals, 0, vn.length);
+                    vn.add(Float.parseFloat(coords[0]));
+                    vn.add(Float.parseFloat(coords[1]));
+                    vn.add(Float.parseFloat(coords[2]));
+                }
+            }
+            catch (IndexOutOfBoundsException e) {
 
-        mFaces = new int[f.length];
-        System.arraycopy(f, 0, mFaces, 0, f.length);
+            }
+        }
+
+        mVertices = new float[v.size()];
+        for (int i=0; i<v.size(); i++) { mVertices[i] = v.get(i); }
+
+        mUVs = new float[vt.size()];
+        for (int i=0; i<vt.size(); i++) { mUVs[i] = vt.get(i); }
+
+        mNormals = new float[vn.size()];
+        for (int i=0; i<vn.size(); i++) { mNormals[i] = vn.get(i); }
+
+        mFaces = new int[f.size()];
+        for (int i=0; i<f.size(); i++) { mFaces[i] = f.get(i); }
     }
 
     public void draw(float[] parentTransform, float[] viewTransform, float[] projectionTransform, Vector3D eyePos, Vector3D lightPos, Vector3D lightColor) {
