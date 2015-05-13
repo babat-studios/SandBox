@@ -1,7 +1,9 @@
 precision mediump float;
 
-varying vec4 vVertexColor;
+/* Interpolation data */
+varying vec4 color;
 
-void main() {
-    gl_FragColor = vec4(vec3(vVertexColor), 1);
+void main (void)  
+{  
+    gl_FragColor = color;
 }

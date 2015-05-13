@@ -44,7 +44,8 @@ public class MainActivity extends Activity {
         mCameraView.setZOrderOnTop(false);
         mGraphicsView.setZOrderOnTop(true);
 
-//        mCameraView.setVisibility(View.GONE);
+        mCameraView.setVisibility(View.GONE);
+        mCameraView.disableView();
 
         OpenCVLoader.initAsync(OpenCVLoader.OPENCV_VERSION_2_4_9, this, mLoaderCallback);
     }
@@ -55,7 +56,7 @@ public class MainActivity extends Activity {
     {
         super.onResume();
         if (mCameraView != null) {
-            mCameraView.enableView();
+//            mCameraView.enableView();
         }
     }
 

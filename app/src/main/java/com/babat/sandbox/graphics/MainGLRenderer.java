@@ -25,7 +25,7 @@ public class MainGLRenderer implements GLSurfaceView.Renderer {
     private Context mContext;
 
     private Gnomon mGnomon = new Gnomon();
-    private Cube mCube = new Cube();
+    private Mesh mCube;
     public Camera mCamera = new Camera();
 
     public float[] mView = new float[16];
@@ -72,13 +72,15 @@ public class MainGLRenderer implements GLSurfaceView.Renderer {
         mCamera.fov = 60;
         mCamera.aspect = 1;
 
-        Timer timer = new Timer();
-        timer.schedule(new TimerTask() {
-            @Override
-            public void run() {
+        mCube = new Mesh(mWorldShader);
+
+//        Timer timer = new Timer();
+//        timer.schedule(new TimerTask() {
+//            @Override
+//            public void run() {
 //                mCube.rotate(5);
-            }
-        }, 0, 50);
+//            }
+//        }, 0, 50);
     }
 
     public void onDrawFrame(GL10 unused) {
@@ -92,7 +94,7 @@ public class MainGLRenderer implements GLSurfaceView.Renderer {
         mCamera.perspective(mProj);
 
         GLES20.glUseProgram(mWorldShader);
-        mCube.draw(this);
+        drawScene();
 
         GLES20.glUseProgram(mGnomonShader);
         float[] viewProj = new float[16];
@@ -100,6 +102,13 @@ public class MainGLRenderer implements GLSurfaceView.Renderer {
 //        Matrix.setIdentityM(viewProj, 0);
 //        mGnomon.draw(mGnomonShader, mProj);
         mGnomon.draw(mGnomonShader, viewProj);
+    }
+
+    private void drawScene() {
+        float[] initialTransform = new float[16];
+        Matrix.setIdentityM(initialTransform, 0);
+
+        mCube.draw(initialTransform, mView, mProj, mCamera.eye, new Vector3D(5.0f, 7.0f, 8.0f), new Vector3D(1.0f, 1.0f, 1.0f));
     }
 
     public void onSurfaceChanged(GL10 unused, int width, int height) {
