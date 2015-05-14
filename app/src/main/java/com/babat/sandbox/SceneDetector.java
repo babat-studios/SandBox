@@ -61,6 +61,10 @@ public class SceneDetector implements CameraView.CameraViewListener {
 
     private DetectWorker dWorker = new DetectWorker();
 
+    static {
+        System.loadLibrary("detector");
+    }
+
 
     private SceneDetector(Context myContext)
     {
@@ -71,7 +75,7 @@ public class SceneDetector implements CameraView.CameraViewListener {
 
         detector = FeatureDetector.create(FeatureDetector.ORB);
         extractor = DescriptorExtractor.create(DescriptorExtractor.ORB);
-        matcher = DescriptorMatcher.create(DescriptorMatcher.FLANNBASED);
+        matcher = DescriptorMatcher.create(DescriptorMatcher.BRUTEFORCE_HAMMINGLUT);
 
         try {
             InputStream crossIs = myContext.getAssets().open("crossCl.jpg");
@@ -80,16 +84,11 @@ public class SceneDetector implements CameraView.CameraViewListener {
             detector.detect(crossMat, crossKeypoints);
             extractor.compute(crossMat, crossKeypoints, crossDescriptors);
 
-            if(crossDescriptors.type()!= CvType.CV_32F) {
-                crossDescriptors.convertTo(crossDescriptors, CvType.CV_32F);
-            }
-
             dWorker.start();
         } catch(IOException e) {
             e.printStackTrace(); //TODO: Crash!!!
         }
     }
-
 
     public static SceneDetector getInstance(Context myContext)
     {
@@ -98,6 +97,8 @@ public class SceneDetector implements CameraView.CameraViewListener {
         }
         return instance;
     }
+
+    public native String test(byte[] data, int width, int height);
 
     public void enableDetector()
     {
@@ -117,94 +118,97 @@ public class SceneDetector implements CameraView.CameraViewListener {
 
 
     public synchronized void onCameraFrame(byte[] data) {
-        if (!busy) {
-            if (detected) { //listen to position detector
+        if (detected) { //listen to position detector
 
-                //                float[] angleChange = positionDetector.angleChange();
-                //
-                //                Mat temp = rvec.clone();
-                //
-                //                double[]buf = new double[1];
-                //                buf[0] = rvec.get(0, 0)[0] + (double)angleChange[2];
-                //                temp.put(0, 0, buf);
-                //
-                //                buf = new double[1];
-                //                buf[0] = rvec.get(1, 0)[0] -(double)angleChange[0];
-                //                temp.put(1,0,buf);
-                //
-                //                buf = new double[1];
-                //                buf[0] = rvec.get(2, 0)[0] + (double)angleChange[1];
-                //                temp.put(2,0,buf);
-                //
-                //                float[] pos = positionDetector.positionChange();
-                //
-                //                Mat temp2 = rvec.clone();
-                //
-                //                buf = new double[1];
-                //                buf[0] = tvec.get(0, 0)[0] + (double)pos[0];
-                //                temp2.put(0, 0, buf);
-                //
-                //                buf = new double[1];
-                //                buf[0] = tvec.get(1, 0)[0] -(double)pos[1];
-                //                temp2.put(1,0,buf);
-                //
-                //                buf = new double[1];
-                //                buf[0] = tvec.get(2, 0)[0] + (double)pos[2]; ;
-                //                temp2.put(2,0,buf);
-                //
-                //                Log.d("GOOO", String.format("%f %f %f - %f %f %f - %f %f %f",
-                //                        tvec.get(0, 0)[0],
-                //                        tvec.get(1, 0)[0],
-                //                        tvec.get(2, 0)[0],
-                //                        pos[0],
-                //                        pos[1],
-                //                        pos[2],
-                //                        temp2.get(0, 0)[0],
-                //                        temp2.get(1, 0)[0],
-                //                        temp2.get(2, 0)[0]));
-                if (cpListener != null) {
-                    cpListener.onCameraMoved(rvec, tvec);
-                }
+            //                float[] angleChange = positionDetector.angleChange();
+            //
+            //                Mat temp = rvec.clone();
+            //
+            //                double[]buf = new double[1];
+            //                buf[0] = rvec.get(0, 0)[0] + (double)angleChange[2];
+            //                temp.put(0, 0, buf);
+            //
+            //                buf = new double[1];
+            //                buf[0] = rvec.get(1, 0)[0] -(double)angleChange[0];
+            //                temp.put(1,0,buf);
+            //
+            //                buf = new double[1];
+            //                buf[0] = rvec.get(2, 0)[0] + (double)angleChange[1];
+            //                temp.put(2,0,buf);
+            //
+            //                float[] pos = positionDetector.positionChange();
+            //
+            //                Mat temp2 = rvec.clone();
+            //
+            //                buf = new double[1];
+            //                buf[0] = tvec.get(0, 0)[0] + (double)pos[0];
+            //                temp2.put(0, 0, buf);
+            //
+            //                buf = new double[1];
+            //                buf[0] = tvec.get(1, 0)[0] -(double)pos[1];
+            //                temp2.put(1,0,buf);
+            //
+            //                buf = new double[1];
+            //                buf[0] = tvec.get(2, 0)[0] + (double)pos[2]; ;
+            //                temp2.put(2,0,buf);
+            //
+            //                Log.d("GOOO", String.format("%f %f %f - %f %f %f - %f %f %f",
+            //                        tvec.get(0, 0)[0],
+            //                        tvec.get(1, 0)[0],
+            //                        tvec.get(2, 0)[0],
+            //                        pos[0],
+            //                        pos[1],
+            //                        pos[2],
+            //                        temp2.get(0, 0)[0],
+            //                        temp2.get(1, 0)[0],
+            //                        temp2.get(2, 0)[0]));
+            if (cpListener != null) {
+                cpListener.onCameraMoved(rvec, tvec);
             }
-            //positionDetector.fix();
-            dWorker.setData(data);
         }
+        //positionDetector.fix();
+        dWorker.setData(data);
     }
 
 
     private class DetectWorker extends Thread {
 
-        private Mat _image;
+        private Mat image;
+        private byte[] _data;
 
-        public DetectWorker() { }
+        public DetectWorker()
+        {
+        }
 
         public void setData(byte[] data)
         {
-            _image = new Mat(1080 + 1080 / 2, 1920, CvType.CV_8UC1);
-            _image.put(0, 0, data);
-            Imgproc.cvtColor(_image, _image, Imgproc.COLOR_YUV2RGB_YV12);
+            if (!busy) {
+                _data = data;
+            }
         }
 
         public void run()
         {
             while (true) {
-                if (_image == null) {
+                if (_data == null) {
                     continue;
                 }
 
+                Log.d(TAG, test(_data, 1920, 1080));
+
+                image = new Mat(1080 + 1080 / 2, 1920, CvType.CV_8UC1);
+
                 busy = true;
-                Mat image = _image.clone();
+                image.put(0, 0, _data);
                 busy = false;
+
+                Imgproc.cvtColor(image, image, Imgproc.COLOR_YUV2RGB_YV12);
 
                 MatOfKeyPoint keypoints = new MatOfKeyPoint();
                 detector.detect(image, keypoints);
 
                 Mat descriptors  = new Mat();
                 extractor.compute(image, keypoints, descriptors);
-
-                if(descriptors.type() != CvType.CV_32F) {
-                    descriptors.convertTo(descriptors, CvType.CV_32F);
-                }
 
                 if (descriptors.cols() + descriptors.rows() > 0) {
                     MatOfDMatch matches = new MatOfDMatch();
@@ -214,7 +218,7 @@ public class SceneDetector implements CameraView.CameraViewListener {
                     List<KeyPoint> kpnt = keypoints.toList();
                     List<Point>  pnts = new ArrayList<Point>();
                     for (DMatch dm : matchList) {
-                        if (dm.distance < 300) { //hardcoded bf 50
+                        if (dm.distance < 50) { //hardcoded bf 50
                             Point pnt = kpnt.get(dm.queryIdx).pt;
                             pnts.add(pnt);
                         }
@@ -238,14 +242,13 @@ public class SceneDetector implements CameraView.CameraViewListener {
 
                     List<Point> resList = new ArrayList<Point>();
                     for (Point pnt : crosses.keySet()) {
-                        if (crosses.get(pnt) > 3) { //hardcoded
+                        if (crosses.get(pnt) > 2) { //hardcoded
                             resList.add(pnt);
                             Log.d(TAG, String.format("Cross found at (%f, %f) [%d]", pnt.x, pnt.y, getId()));
                         }
                     }
 
                     if (resList.size() == 4) {
-                        detected = true;
                         calibrate(image, resList);
                     }
                 }
@@ -318,14 +321,10 @@ public class SceneDetector implements CameraView.CameraViewListener {
             imagePointView.fromArray(imagePnts);
 
             //Output arrays
-            Mat _rvec = new Mat();
-            Mat _tvec = new Mat();
-            Calib3d.solvePnP(objectPointView, imagePointView, cameraMatrix, distCoefs, _rvec, _tvec);
-
-            busy = true;
-            rvec = _rvec;
-            tvec = _tvec;
-            busy = false;
+            rvec = new Mat();
+            tvec = new Mat();
+            Calib3d.solvePnP(objectPointView, imagePointView, cameraMatrix, distCoefs, rvec, tvec);
+            detected = true;
         }
 
     };
