@@ -61,6 +61,7 @@ public class SceneDetector implements CameraView.CameraViewListener {
 
     private DetectWorker dWorker = new DetectWorker();
 
+
     static {
         System.loadLibrary("detector");
     }
@@ -69,7 +70,7 @@ public class SceneDetector implements CameraView.CameraViewListener {
     private SceneDetector(Context myContext)
     {
         context = (MainActivity) myContext;
-
+        
         positionDetector = PositionDetector.getInstance(myContext);
         positionDetector.enableDetector();
 
@@ -98,7 +99,7 @@ public class SceneDetector implements CameraView.CameraViewListener {
         return instance;
     }
 
-    public native String test(byte[] data, int width, int height);
+    public native String test(byte[] data);
 
     public void enableDetector()
     {
@@ -194,7 +195,7 @@ public class SceneDetector implements CameraView.CameraViewListener {
                     continue;
                 }
 
-                Log.d(TAG, test(_data, 1920, 1080));
+                test(_data);
 
                 image = new Mat(1080 + 1080 / 2, 1920, CvType.CV_8UC1);
 
