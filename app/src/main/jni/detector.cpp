@@ -28,7 +28,7 @@ extern "C" {
         Mat mbgra(height, width, CV_8UC4);
         cvtColor(myuv, mbgra, CV_YUV420sp2BGR, 4);
 
-        ORB orb(100);
+        ORB orb(250);
         Mat frameDescriptors;
         vector<KeyPoint> keypoints;
         orb(mgray, Mat(), keypoints, frameDescriptors);

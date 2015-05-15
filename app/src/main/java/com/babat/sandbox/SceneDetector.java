@@ -58,8 +58,8 @@ public class SceneDetector implements CameraView.CameraViewListener {
     private MatOfKeyPoint crossKeypoints = new MatOfKeyPoint();
     private Mat crossDescriptors = new Mat();
 
-    private Mat rvec;
-    private Mat tvec;
+    private Mat rvec = new Mat();
+    private Mat tvec = new Mat();
 
     private DetectWorker dWorker = new DetectWorker();
 
@@ -178,8 +178,24 @@ public class SceneDetector implements CameraView.CameraViewListener {
 
         private byte[] _data;
 
+        Size imgSize = new Size(1920, 1080);
+        MatOfDouble distCoefs = new MatOfDouble();
+        Mat cameraMatrix = new Mat(3,3,5);
+
         public DetectWorker()
         {
+            double focal_mm = 3.97;
+            double sensor_width_mm = 4.54;
+            double focal_px = (focal_mm/sensor_width_mm) * imgSize.width;
+            cameraMatrix.put(0, 0, focal_px);
+            cameraMatrix.put(0, 1, 0);
+            cameraMatrix.put(0, 2, imgSize.width/2);
+            cameraMatrix.put(1, 0, 0);
+            cameraMatrix.put(1, 1, focal_px);
+            cameraMatrix.put(1, 2, imgSize.height/2);
+            cameraMatrix.put(2, 0, 0);
+            cameraMatrix.put(2, 1, 0);
+            cameraMatrix.put(2, 2, 1);
         }
 
         public void setData(byte[] data)
@@ -207,29 +223,6 @@ public class SceneDetector implements CameraView.CameraViewListener {
         private void calibrate(Point[] crosses)
         {
             Log.d(TAG, "Calibrating camera");
-
-            //Input image size
-            Size imgSize = new Size(1920, 1080);
-
-            //Zero distortion coefs
-            MatOfDouble distCoefs = new MatOfDouble();
-
-            //Nexus 5 camera view matrix
-            Mat cameraMatrix = new Mat(3,3,5);
-            //Estimation:
-            double focal_mm = 3.97;
-            double sensor_width_mm = 4.54;
-            double focal_px = (focal_mm/sensor_width_mm) * imgSize.width;
-            cameraMatrix.put(0, 0, focal_px);
-            cameraMatrix.put(0, 1, 0);
-            cameraMatrix.put(0, 2, imgSize.width/2);
-            cameraMatrix.put(1, 0, 0);
-            cameraMatrix.put(1, 1, focal_px);
-            cameraMatrix.put(1, 2, imgSize.height/2);
-            cameraMatrix.put(2, 0, 0);
-            cameraMatrix.put(2, 1, 0);
-            cameraMatrix.put(2, 2, 1);
-
 
             //Corner recognition
             List<Double> xs = new ArrayList<Double>();
@@ -269,9 +262,6 @@ public class SceneDetector implements CameraView.CameraViewListener {
             MatOfPoint2f imagePointView = new MatOfPoint2f();
             imagePointView.fromArray(imagePnts);
 
-            //Output arrays
-            rvec = new Mat();
-            tvec = new Mat();
             Calib3d.solvePnP(objectPointView, imagePointView, cameraMatrix, distCoefs, rvec, tvec);
             detected = true;
         }
