@@ -34,7 +34,7 @@ public class MainGLRenderer implements GLSurfaceView.Renderer {
     private int mGnomonShader;
     private int mWorldShader;
 
-    public boolean mIsCalibrated = true;
+    public boolean mIsCalibrated = false;
 
     public MainGLRenderer(Context context) { mContext = context; }
 
@@ -80,7 +80,7 @@ public class MainGLRenderer implements GLSurfaceView.Renderer {
         timer.schedule(new TimerTask() {
             @Override
             public void run() {
-                mCube.rotate(5);
+//                mCube.rotate(5);
             }
         }, 0, 50);
     }

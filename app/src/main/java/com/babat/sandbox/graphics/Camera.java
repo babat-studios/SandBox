@@ -15,8 +15,8 @@ public class Camera {
     public float[] mView = new float[16];
 
     public void view(float[] m) {
-//        for (int i=0; i<16; i++) m[i] = mView[i];
-        Matrix.setLookAtM(m, 0, eye.x, eye.y, eye.z, lookAt.x, lookAt.y, lookAt.z, up.x, up.y, up.z);
+        for (int i=0; i<16; i++) m[i] = mView[i];
+//        Matrix.setLookAtM(m, 0, eye.x, eye.y, eye.z, lookAt.x, lookAt.y, lookAt.z, up.x, up.y, up.z);
 
 //        for (int i=0; i<16; i++) {
 //            Log.d("ViewMatrix", String.format("[%d] %f - %f", i, mView[i], m[i]));

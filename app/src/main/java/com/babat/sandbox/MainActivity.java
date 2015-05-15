@@ -12,6 +12,7 @@ import android.app.Activity;
 import android.opengl.Matrix;
 import android.os.Bundle;
 import android.util.Log;
+import android.view.View;
 import android.view.WindowManager;
 
 import com.babat.sandbox.graphics.MainGLSurfaceView;

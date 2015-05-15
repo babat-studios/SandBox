@@ -10,7 +10,7 @@ import android.util.Log;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.apache.commons.math3.stat.descriptive.DescriptiveStatistics;
+//import org.apache.commons.math3.stat.descriptive.DescriptiveStatistics;
 
 
 public class PositionDetector implements SensorEventListener {
@@ -30,9 +30,9 @@ public class PositionDetector implements SensorEventListener {
     private float[] currentRotation;
     private float[] fixedRotation;
 
-    private DescriptiveStatistics stat1 = new DescriptiveStatistics();
-    private DescriptiveStatistics stat2 = new DescriptiveStatistics();
-    private DescriptiveStatistics stat3 = new DescriptiveStatistics();
+//    private DescriptiveStatistics stat1 = new DescriptiveStatistics();
+//    private DescriptiveStatistics stat2 = new DescriptiveStatistics();
+//    private DescriptiveStatistics stat3 = new DescriptiveStatistics();
 
 
     private long pti =  System.currentTimeMillis();
@@ -136,27 +136,27 @@ public class PositionDetector implements SensorEventListener {
     }
 
     private void updateTranslation(float[] vectors) {
-        long ti = System.currentTimeMillis();
-        float deltaTi = (ti - pti)/1000.0f;
-        pti = ti;
-
-        stat1.addValue(vectors[0]);
-        stat2.addValue(vectors[1]);
-        stat3.addValue(vectors[2]);
-
-        vectors[0] -= stat1.getPercentile(50);
-        vectors[1] -= stat2.getPercentile(50);
-        vectors[2] -= stat3.getPercentile(50);
-
-        veli[0] = veli[0] + vectors[0] * deltaTi;
-        veli[1] = veli[1] + vectors[1] * deltaTi;
-        veli[2] = veli[2] + vectors[2] * deltaTi;
-
-        currentTranslation[0] = currentTranslation[0] + veli[0] * deltaTi + 0.5f * vectors[0] * deltaTi * deltaTi;
-        currentTranslation[1] = currentTranslation[1] + veli[1] * deltaTi + 0.5f * vectors[1] * deltaTi * deltaTi;
-        currentTranslation[2] = currentTranslation[2] + veli[2] * deltaTi + 0.5f * vectors[2] * deltaTi * deltaTi;
-
-        Log.d(TAG, String.format("Position %f %f %f %f", currentTranslation[0], veli[0], vectors[0], stat1.getPercentile(50), stat1.getStandardDeviation()));
+//        long ti = System.currentTimeMillis();
+//        float deltaTi = (ti - pti)/1000.0f;
+//        pti = ti;
+//
+//        stat1.addValue(vectors[0]);
+//        stat2.addValue(vectors[1]);
+//        stat3.addValue(vectors[2]);
+//
+//        vectors[0] -= stat1.getPercentile(50);
+//        vectors[1] -= stat2.getPercentile(50);
+//        vectors[2] -= stat3.getPercentile(50);
+//
+//        veli[0] = veli[0] + vectors[0] * deltaTi;
+//        veli[1] = veli[1] + vectors[1] * deltaTi;
+//        veli[2] = veli[2] + vectors[2] * deltaTi;
+//
+//        currentTranslation[0] = currentTranslation[0] + veli[0] * deltaTi + 0.5f * vectors[0] * deltaTi * deltaTi;
+//        currentTranslation[1] = currentTranslation[1] + veli[1] * deltaTi + 0.5f * vectors[1] * deltaTi * deltaTi;
+//        currentTranslation[2] = currentTranslation[2] + veli[2] * deltaTi + 0.5f * vectors[2] * deltaTi * deltaTi;
+//
+//        Log.d(TAG, String.format("Position %f %f %f %f", currentTranslation[0], veli[0], vectors[0], stat1.getPercentile(50), stat1.getStandardDeviation()));
     }
 
 }
