@@ -47,7 +47,7 @@ Point3f objectPntsArray[] = {
 };
 Mat objectPnts(4,1,DataType<Point3f>::type, objectPntsArray);
 
-Mat mask();
+Mat mask = Mat();
 
 int moreThan(double x, double xs[], int size) {
     int res = 0;
@@ -71,7 +71,7 @@ extern "C" {
         jbyte* yuv = env->GetByteArrayElements(frameData, NULL);
         Mat mgray(imgSize.height, imgSize.width, CV_8UC1, (unsigned char *)yuv);
 
-        orb(mgray, featureMask, keypoints, frameDescriptors);
+        orb(mgray, mask, keypoints, frameDescriptors);
         matcher.match(frameDescriptors, crossDescriptors, matches);
 
         vector<Point> goodPoints;
