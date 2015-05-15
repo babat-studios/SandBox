@@ -43,8 +43,6 @@ Point3f objectPntsArray[] = {
 Mat objectPnts(4,1,DataType<Point3f>::type, objectPntsArray);
 
 
-
-
 int moreThan(double x, double xs[], int size) {
     int res = 0;
     for (int i = 0; i < size; i++) {
@@ -56,13 +54,10 @@ int moreThan(double x, double xs[], int size) {
 }
 
 
-
-
 extern "C" {
 
-    jobjectArray Java_com_babat_sandbox_SceneDetector_test(JNIEnv* env, jobject thiz, jbyteArray frameData, jlong crossDescAddr, jlong rvecAddr, jlong tvecAddr)
+    jboolean Java_com_babat_sandbox_SceneDetector_jniDetect(JNIEnv* env, jobject thiz, jbyteArray frameData, jlong crossDescAddr, jlong rvecAddr, jlong tvecAddr)
     {
-
         Mat& crossDescriptors = *(Mat*)crossDescAddr;
 
         jbyte* yuv = env->GetByteArrayElements(frameData, NULL);
@@ -119,18 +114,6 @@ extern "C" {
             }
         }
 
-        jclass pntClass = env->FindClass("org/opencv/core/Point");
-        jmethodID constructor = env->GetMethodID(pntClass, "<init>", "(DD)V");
-        jobjectArray ret = (jobjectArray)env->NewObjectArray(
-                goodCrosses.size(),
-                pntClass,
-                env->NewObject(pntClass, constructor, 0, 0));
-        for(int i = 0; i < goodCrosses.size(); i++) {
-            env->SetObjectArrayElement(ret, i,
-                env->NewObject(pntClass, constructor, (jdouble)goodCrosses[i].x, (jdouble)goodCrosses[i].y));
-        }
-
-
         if (goodCrosses.size() == 4) {
             double xs[] = { goodCrosses[0].x, goodCrosses[1].x, goodCrosses[2].x, goodCrosses[3].x };
             double ys[] = { goodCrosses[0].y, goodCrosses[1].y, goodCrosses[2].y, goodCrosses[3].y };
@@ -161,18 +144,18 @@ extern "C" {
 
             solvePnP(objectPnts, imagePnts, cameraMatrix, distCoefs, rvec, tvec);
 
-            string dbgMsg;
-            stringstream dbgMsgSS;
-            dbgMsgSS << "rvec: " << rvec.at<double>(0);
-            dbgMsg = dbgMsgSS.str();
-            __android_log_write(ANDROID_LOG_INFO, "JNIA", dbgMsg.c_str());
+//            string dbgMsg;
+//            stringstream dbgMsgSS;
+//            dbgMsgSS << "rvec: " << rvec.at<double>(0);
+//            dbgMsg = dbgMsgSS.str();
+//            __android_log_write(ANDROID_LOG_INFO, "JNIA", dbgMsg.c_str());
 
+            return true;
         }
-
        
         env->ReleaseByteArrayElements(frameData, yuv, 0);
         
-        return ret;
+        return false;
     }
 
 
