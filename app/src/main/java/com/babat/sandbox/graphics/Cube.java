@@ -182,10 +182,9 @@ public class Cube {
         mNormalBuffer.put(mNormalData);
         mNormalBuffer.position(0);
 
-        float[] rot = new float[16];
         float[] model = new float[16];
         Matrix.setIdentityM(model, 0);
-//        Matrix.rotateM(rot, 0, mAngle, 0.0f, 0.0f, 1.0f);
+        Matrix.rotateM(model, 0, mAngle, 0.0f, 0.0f, 1.0f);
         Matrix.translateM(model, 0, 0.0f, 0.0f, 0.0f);
         Matrix.scaleM(model, 0, 0.5f, 0.5f, 0.5f);
 

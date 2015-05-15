@@ -15,6 +15,7 @@ import android.util.Log;
 import android.view.WindowManager;
 
 import com.babat.sandbox.graphics.MainGLSurfaceView;
+import com.babat.sandbox.graphics.Utils;
 import com.babat.sandbox.graphics.Vector3D;
 
 public class MainActivity extends Activity implements CameraPositionListener {
@@ -34,6 +35,8 @@ public class MainActivity extends Activity implements CameraPositionListener {
     {
         super.onCreate(savedInstanceState);
 
+        Utils.setContext(this);
+
         getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
         setContentView(R.layout.activity_main);
 
@@ -43,7 +46,8 @@ public class MainActivity extends Activity implements CameraPositionListener {
         mCameraView.setZOrderOnTop(false);
         mGraphicsView.setZOrderOnTop(true);
 
-//        mCameraView.setVisibility(View.GONE);
+        mCameraView.setVisibility(View.GONE);
+        mCameraView.disableView();
 
         OpenCVLoader.initAsync(OpenCVLoader.OPENCV_VERSION_2_4_9, this, mLoaderCallback);
     }
@@ -54,7 +58,7 @@ public class MainActivity extends Activity implements CameraPositionListener {
     {
         super.onResume();
         if (mCameraView != null) {
-            mCameraView.enableView();
+//            mCameraView.enableView();
         }
         if (sceneDetector != null) {
             sceneDetector.enableDetector();

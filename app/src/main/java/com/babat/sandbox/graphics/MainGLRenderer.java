@@ -25,7 +25,7 @@ public class MainGLRenderer implements GLSurfaceView.Renderer {
     private Context mContext;
 
     private Gnomon mGnomon = new Gnomon();
-    private Cube mCube = new Cube();
+    private Mesh mCube;
     public Camera mCamera = new Camera();
 
     public float[] mView = new float[16];
@@ -41,6 +41,8 @@ public class MainGLRenderer implements GLSurfaceView.Renderer {
     public void onSurfaceCreated(GL10 unused, EGLConfig config) {
         GLES20.glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
         GLES20.glEnable(GLES20.GL_DEPTH_TEST);
+        GLES20.glEnable(GLES20.GL_CULL_FACE);
+        GLES20.glCullFace(GLES20.GL_BACK);
 
         int vertexShader = loadShader(GLES20.GL_VERTEX_SHADER, "world.vert");
         int fragmentShader = loadShader(GLES20.GL_FRAGMENT_SHADER, "world.frag");
@@ -72,11 +74,13 @@ public class MainGLRenderer implements GLSurfaceView.Renderer {
         mCamera.fov = 60;
         mCamera.aspect = 1;
 
+        mCube = new Mesh(mWorldShader);
+
         Timer timer = new Timer();
         timer.schedule(new TimerTask() {
             @Override
             public void run() {
-//                mCube.rotate(5);
+                mCube.rotate(5);
             }
         }, 0, 50);
     }
@@ -91,8 +95,12 @@ public class MainGLRenderer implements GLSurfaceView.Renderer {
         mCamera.view(mView);
         mCamera.perspective(mProj);
 
+        GLES20.glEnable(GLES20.GL_TEXTURE_2D);
+        GLES20.glEnable(GLES20.GL_BLEND);
+        GLES20.glBlendFunc(GLES20.GL_ONE, GLES20.GL_SRC_COLOR);
+
         GLES20.glUseProgram(mWorldShader);
-        mCube.draw(this);
+        drawScene();
 
         GLES20.glUseProgram(mGnomonShader);
         float[] viewProj = new float[16];
@@ -100,6 +108,13 @@ public class MainGLRenderer implements GLSurfaceView.Renderer {
 //        Matrix.setIdentityM(viewProj, 0);
 //        mGnomon.draw(mGnomonShader, mProj);
         mGnomon.draw(mGnomonShader, viewProj);
+    }
+
+    private void drawScene() {
+        float[] initialTransform = new float[16];
+        Matrix.setIdentityM(initialTransform, 0);
+
+        mCube.draw(initialTransform, mView, mProj, mCamera.eye, new Vector3D(5.0f, 7.0f, 8.0f), new Vector3D(1.0f, 1.0f, 1.0f));
     }
 
     public void onSurfaceChanged(GL10 unused, int width, int height) {
@@ -136,4 +151,5 @@ public class MainGLRenderer implements GLSurfaceView.Renderer {
     }
 
     public int getProgram() { return mWorldShader; }
+    public Context getContext() { return mContext; }
 }
