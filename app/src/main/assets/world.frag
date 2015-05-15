@@ -33,12 +33,12 @@ void main (void)
     vec3 V = (gEyePosition - point).xyz;
     V = normalize(V);
 
-    float cosTheta = clamp(dot(N, L), 0, 1);
+    float cosTheta = clamp(dot(N, L), 0.0, 1.0);
     float cosAlpha = dot(R, V);
 
-    vec4 ka = clamp(gAmbientColor * gLightColor, 0, 1);
-    vec4 kd = clamp(gDiffuseColor * gLightColor * cosTheta, 0, 1);
-    vec4 ks = clamp(gSpecularColor * gLightColor * pow(cosAlpha, gShininess), 0, 1);
+    vec4 ka = gAmbientColor * gLightColor;
+    vec4 kd = gDiffuseColor * gLightColor * cosTheta;
+    vec4 ks = gSpecularColor * gLightColor * pow(cosAlpha, gShininess);
 
-    gl_FragColor = clamp(ka + kd, 0, 1);
+    gl_FragColor = ka + kd;
 }

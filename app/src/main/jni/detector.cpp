@@ -14,7 +14,7 @@ using namespace cv;
 using namespace std;
 
 
-ORB orb(250);
+ORB orb(250, 1.5f);
 Mat featureMask;
 int width = 1920; //remove
 int height = 1080; //remove

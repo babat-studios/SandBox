@@ -46,7 +46,8 @@ public class Mesh {
     private GeometryObject[] mGeometries;
 
     public void rotate(int i) {
-        mRotation.z += i;
+//        mRotation.z += 180;
+        mScale = new Vector3D(0.5f, 0.5f, 0.5f);
     }
 
     public class GeometryObject {

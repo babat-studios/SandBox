@@ -47,8 +47,8 @@ public class MainActivity extends Activity implements CameraPositionListener {
         mCameraView.setZOrderOnTop(false);
         mGraphicsView.setZOrderOnTop(true);
 
-        mCameraView.setVisibility(View.GONE);
-        mCameraView.disableView();
+        //mCameraView.setVisibility(View.GONE);
+        //mCameraView.disableView();
 
         OpenCVLoader.initAsync(OpenCVLoader.OPENCV_VERSION_2_4_9, this, mLoaderCallback);
     }
@@ -59,7 +59,7 @@ public class MainActivity extends Activity implements CameraPositionListener {
     {
         super.onResume();
         if (mCameraView != null) {
-//            mCameraView.enableView();
+            mCameraView.enableView();
         }
         if (sceneDetector != null) {
             sceneDetector.enableDetector();

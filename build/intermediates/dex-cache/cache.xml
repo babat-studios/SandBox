@@ -9,6 +9,20 @@
         <dex dex="/ssd/projects/babat/SandBox/app/build/intermediates/pre-dexed/debug/internal_impl-22.1.1-0f801dc08bd45abc970fad1d8a37377360bf9464.jar" />
     </item>
     <item
+        jar="/ssd/projects/babat/SandBox/app/build/intermediates/exploded-aar/SandBox/openCVLibrary2410/unspecified/jars/classes.jar"
+        jumboMode="false"
+        revision="22.0.1"
+        sha1="dfd21e6e846ffaace38803a2585b2dff2bdee254">
+        <dex dex="/ssd/projects/babat/SandBox/app/build/intermediates/pre-dexed/debug/classes-b42c3cc24fa4a044394216f222f43d1396b36eb2.jar" />
+    </item>
+    <item
+        jar="/ssd/projects/babat/SandBox/app/libs/commons-math3-3.5.jar"
+        jumboMode="false"
+        revision="22.0.1"
+        sha1="13af68e9a11576953f5c4b09436f8207be9d3a27">
+        <dex dex="/ssd/projects/babat/SandBox/app/build/intermediates/pre-dexed/debug/commons-math3-3.5-4308142cd6ceec6f4dfcbc48c15ad743d0f76c79.jar" />
+    </item>
+    <item
         jar="/ssd/sdk/android/extras/android/m2repository/com/android/support/support-annotations/22.1.1/support-annotations-22.1.1.jar"
         jumboMode="false"
         revision="22.0.1"
@@ -21,20 +35,6 @@
         revision="22.0.1"
         sha1="c95ba8152923e4872e86a82cfcba9a51c0214328">
         <dex dex="/ssd/projects/babat/SandBox/app/build/intermediates/pre-dexed/debug/classes-bbef2b22c61ae2b780aff87ad57e79972d1adb8e.jar" />
-    </item>
-    <item
-        jar="/ssd/projects/babat/SandBox/app/build/intermediates/exploded-aar/SandBox/openCVLibrary2410/unspecified/jars/classes.jar"
-        jumboMode="false"
-        revision="22.0.1"
-        sha1="909bf876594ade50880b25737e8a16c6d945ab73">
-        <dex dex="/ssd/projects/babat/SandBox/app/build/intermediates/pre-dexed/debug/classes-b42c3cc24fa4a044394216f222f43d1396b36eb2.jar" />
-    </item>
-    <item
-        jar="/ssd/projects/babat/SandBox/app/libs/commons-math3-3.5.jar"
-        jumboMode="false"
-        revision="22.0.1"
-        sha1="13af68e9a11576953f5c4b09436f8207be9d3a27">
-        <dex dex="/ssd/projects/babat/SandBox/app/build/intermediates/pre-dexed/debug/commons-math3-3.5-4308142cd6ceec6f4dfcbc48c15ad743d0f76c79.jar" />
     </item>
 
 </items>

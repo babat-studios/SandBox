@@ -75,6 +75,7 @@ public class MainGLRenderer implements GLSurfaceView.Renderer {
         mCamera.aspect = 1;
 
         mCube = new Mesh(mWorldShader);
+        mCube.rotate(5);
 
         Timer timer = new Timer();
         timer.schedule(new TimerTask() {
@@ -114,7 +115,7 @@ public class MainGLRenderer implements GLSurfaceView.Renderer {
         float[] initialTransform = new float[16];
         Matrix.setIdentityM(initialTransform, 0);
 
-        mCube.draw(initialTransform, mView, mProj, mCamera.eye, new Vector3D(5.0f, 7.0f, 8.0f), new Vector3D(1.0f, 1.0f, 1.0f));
+        mCube.draw(initialTransform, mView, mProj, mCamera.eye, new Vector3D(5.0f, -7.0f, 8.0f), new Vector3D(1.0f, 1.0f, 1.0f));
     }
 
     public void onSurfaceChanged(GL10 unused, int width, int height) {
