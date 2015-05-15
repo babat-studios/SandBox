@@ -6,6 +6,7 @@ import org.opencv.core.MatOfKeyPoint;
 
 import org.opencv.features2d.DescriptorExtractor;
 import org.opencv.features2d.FeatureDetector;
+import org.opencv.features2d.KeyPoint;
 
 import android.content.Context;
 import android.graphics.Bitmap;
@@ -14,6 +15,8 @@ import android.util.Log;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.ArrayList;
+import java.util.List;
 
 
 public class SceneDetector implements CameraView.CameraViewListener {
@@ -26,6 +29,7 @@ public class SceneDetector implements CameraView.CameraViewListener {
 
     private boolean busy = false;
     private boolean detected = false;
+    private int fpd = 0;
 
     private FeatureDetector detector;
     private DescriptorExtractor extractor;
@@ -93,8 +97,10 @@ public class SceneDetector implements CameraView.CameraViewListener {
             if (cpListener != null) {
                 cpListener.onCameraMoved(rvec, tvec);
             }
+            detected = false;
         }
         dWorker.setData(data);
+        fpd++;
     }
 
 
@@ -108,9 +114,7 @@ public class SceneDetector implements CameraView.CameraViewListener {
 
         public void setData(byte[] data)
         {
-            if (!busy) {
-                _data = data;
-            }
+            _data = data;
         }
 
         public void run()
@@ -119,11 +123,15 @@ public class SceneDetector implements CameraView.CameraViewListener {
                 if (_data == null) {
                     continue;
                 }
-                detected = jniDetect(_data,
+                boolean d = jniDetect(_data,
                         crossDescriptors.getNativeObjAddr(),
                         rvec.getNativeObjAddr(),
                         tvec.getNativeObjAddr());
-
+                if (d) {
+                    Log.d(TAG, String.format("fpd %d", fpd));
+                    fpd = 0;
+                }
+                detected = d;
             }
         }
 
