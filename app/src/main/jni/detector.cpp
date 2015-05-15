@@ -13,7 +13,7 @@ using namespace cv;
 using namespace std;
 
 
-ORB orb(300, 1.5f); //TWEAK
+ORB orb(300, 1.5f, 8, 31, 0, 2, ORB::FAST_SCORE, 31); //TWEAK
 BFMatcher matcher(NORM_HAMMING); //TWEAK
 
 Mat featureMask;
@@ -47,6 +47,7 @@ Point3f objectPntsArray[] = {
 };
 Mat objectPnts(4,1,DataType<Point3f>::type, objectPntsArray);
 
+Mat mask();
 
 int moreThan(double x, double xs[], int size) {
     int res = 0;
@@ -119,6 +120,8 @@ extern "C" {
 
             Point2f imagePntsArray[] = { goodCrosses[0], goodCrosses[1], goodCrosses[2], goodCrosses[3] };
 
+            mask = Mat::zeros(imgSize, CV_8UC1);
+
             for (int i = 0; i < 4; i++) {
                 int xInd = moreThan(goodCrosses[i].x, xs, 4);
                 int yInd = moreThan(goodCrosses[i].y, ys, 4);
@@ -134,10 +137,17 @@ extern "C" {
                     mIdx = 2;
                 }
                 imagePntsArray[mIdx] = goodCrosses[i];
+
+                // select a ROI
+                Mat roi(mask, Rect(goodCrosses[i].x-100,
+                                   goodCrosses[i].y-100,
+                                   200,
+                                   200));
+
+                roi = Scalar(255, 255, 255);
             }
 
             Mat imagePnts(4,1,DataType<Point2f>::type, imagePntsArray);
-
 
             Mat& rvec = *(Mat*)rvecAddr;
             Mat& tvec = *(Mat*)tvecAddr;
@@ -146,6 +156,8 @@ extern "C" {
 
             retVal = true;
 
+        } else {
+            mask = Mat();
         }
        
         env->ReleaseByteArrayElements(frameData, yuv, 0);
