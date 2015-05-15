@@ -101,7 +101,7 @@ public class SceneDetector implements CameraView.CameraViewListener {
         return instance;
     }
 
-    public native Point[] test(byte[] data, long cdesc);
+    public native Point[] test(byte[] data, long cdesc, long rvec, long tvec);
 
     public void enableDetector()
     {
@@ -212,58 +212,12 @@ public class SceneDetector implements CameraView.CameraViewListener {
                     continue;
                 }
 
-                Point[] pnts = test(_data, crossDescriptors.getNativeObjAddr());
+                Point[] pnts = test(_data, crossDescriptors.getNativeObjAddr(), rvec.getNativeObjAddr(), tvec.getNativeObjAddr());
 
                 if (pnts.length == 4) {
-                    calibrate(pnts);
+                    detected = true;
                 }
             }
-        }
-
-        private void calibrate(Point[] crosses)
-        {
-            Log.d(TAG, "Calibrating camera");
-
-            //Corner recognition
-            List<Double> xs = new ArrayList<Double>();
-            List<Double> ys = new ArrayList<Double>();
-            for (Point pnt : crosses) {
-                xs.add(pnt.x);
-                ys.add(pnt.y);
-            }
-            Collections.sort(xs);
-            Collections.sort(ys);
-
-            Point3[] objectPnts = new Point3[4];
-            Point[] imagePnts = new Point[4];
-            for (Point pnt : crosses) {
-                int xIdx = xs.indexOf(pnt.x);
-                int yIdx = ys.indexOf(pnt.y);
-
-                int mIdx; //clockwise
-                if (xIdx < 2 && yIdx < 2) { //top left
-                    mIdx = 3;
-                    objectPnts[mIdx] = new Point3(-1, 1, 0);
-                } else if (xIdx >= 2 && yIdx < 2) { //top right
-                    mIdx = 0;
-                    objectPnts[mIdx] = new Point3(1, 1, 0);
-                } else if (xIdx >= 2 && yIdx >= 2) { //bottom right
-                    mIdx = 1;
-                    objectPnts[mIdx] = new Point3(1, -1, 0);
-                } else { //bottom left
-                    mIdx = 2;
-                    objectPnts[mIdx] = new Point3(-1, -1, 0);
-                }
-                imagePnts[mIdx] = new Point(pnt.x, pnt.y);
-            }
-
-            MatOfPoint3f objectPointView = new MatOfPoint3f();
-            objectPointView.fromArray(objectPnts);
-            MatOfPoint2f imagePointView = new MatOfPoint2f();
-            imagePointView.fromArray(imagePnts);
-
-            Calib3d.solvePnP(objectPointView, imagePointView, cameraMatrix, distCoefs, rvec, tvec);
-            detected = true;
         }
 
     };
