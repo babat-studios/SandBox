@@ -27,6 +27,8 @@ import android.util.Log;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.lang.reflect.Constructor;
+import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -99,7 +101,7 @@ public class SceneDetector implements CameraView.CameraViewListener {
         return instance;
     }
 
-    public native String test(byte[] data, long cdesc);
+    public native Point[] test(byte[] data, long cdesc);
 
     public void enableDetector()
     {
@@ -174,7 +176,6 @@ public class SceneDetector implements CameraView.CameraViewListener {
 
     private class DetectWorker extends Thread {
 
-        private Mat image;
         private byte[] _data;
 
         public DetectWorker()
@@ -195,73 +196,20 @@ public class SceneDetector implements CameraView.CameraViewListener {
                     continue;
                 }
 
-                test(_data, crossDescriptors.getNativeObjAddr());
+                Point[] pnts = test(_data, crossDescriptors.getNativeObjAddr());
 
-                image = new Mat(1080 + 1080 / 2, 1920, CvType.CV_8UC1);
-
-                busy = true;
-                image.put(0, 0, _data);
-                busy = false;
-
-                Imgproc.cvtColor(image, image, Imgproc.COLOR_YUV2RGB_YV12);
-
-                MatOfKeyPoint keypoints = new MatOfKeyPoint();
-                detector.detect(image, keypoints);
-
-                Mat descriptors  = new Mat();
-                extractor.compute(image, keypoints, descriptors);
-
-                if (descriptors.cols() + descriptors.rows() > 0) {
-                    MatOfDMatch matches = new MatOfDMatch();
-                    matcher.match(descriptors, crossDescriptors, matches);
-                    List<DMatch> matchList = matches.toList();
-
-                    List<KeyPoint> kpnt = keypoints.toList();
-                    List<Point>  pnts = new ArrayList<Point>();
-                    for (DMatch dm : matchList) {
-                        if (dm.distance < 50) { //hardcoded bf 50
-                            Point pnt = kpnt.get(dm.queryIdx).pt;
-                            pnts.add(pnt);
-                        }
-                    }
-
-                    Map<Point, Integer> crosses = new HashMap<Point, Integer>();
-                    for (Point pnt : pnts) {
-                        boolean addNew = true;
-                        for (Point crPnt : crosses.keySet()) {
-                            double dist = Math.abs(pnt.x-crPnt.x) + Math.abs(pnt.y-crPnt.y);
-                            if (dist < 35) { //hardcoded
-                                addNew = false;
-                                crosses.put(crPnt, crosses.get(crPnt)+1);
-                                break;
-                            }
-                        }
-                        if (addNew) {
-                            crosses.put(pnt, 1);
-                        }
-                    }
-
-                    List<Point> resList = new ArrayList<Point>();
-                    for (Point pnt : crosses.keySet()) {
-                        if (crosses.get(pnt) > 2) { //hardcoded
-                            resList.add(pnt);
-                            Log.d(TAG, String.format("Cross found at (%f, %f) [%d]", pnt.x, pnt.y, getId()));
-                        }
-                    }
-
-                    if (resList.size() == 4) {
-                        calibrate(image, resList);
-                    }
+                if (pnts.length == 4) {
+                    calibrate(pnts);
                 }
             }
         }
 
-        private void calibrate(Mat img, List<Point> crosses)
+        private void calibrate(Point[] crosses)
         {
             Log.d(TAG, "Calibrating camera");
 
             //Input image size
-            Size imgSize = img.size();
+            Size imgSize = new Size(1920, 1080);
 
             //Zero distortion coefs
             MatOfDouble distCoefs = new MatOfDouble();
