@@ -1,0 +1,3 @@
+set solib-search-path /ssd/projects/babat/SandBox/app/src/main/obj/local/armeabi-v7a
+source /home/aisfo/ndk/prebuilt/common/gdb/common.setup
+directory /home/aisfo/ndk/platforms/android-3/arch-arm/usr/include /ssd/sdk/OpenCV-2.4.10-android-sdk/sdk/native/jni/include/opencv /ssd/sdk/OpenCV-2.4.10-android-sdk/sdk/native/jni/include /home/aisfo/ndk/sources/cxx-stl/gnu-libstdc++/4.8/include /home/aisfo/ndk/sources/cxx-stl/gnu-libstdc++/4.8/libs/armeabi-v7a/include /home/aisfo/ndk/sources/cxx-stl/gnu-libstdc++/4.8/include/backward /ssd/projects/babat/SandBox/app/src/main/jni

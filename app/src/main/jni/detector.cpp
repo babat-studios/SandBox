@@ -138,12 +138,12 @@ extern "C" {
                 }
                 imagePntsArray[mIdx] = goodCrosses[i];
 
-                // select a ROI
-                Mat roi(mask, Rect(goodCrosses[i].x-100,
-                                   goodCrosses[i].y-100,
-                                   200,
-                                   200));
-
+                int roiX = max(goodCrosses[i].x-100, 0);
+                int roiY = max(goodCrosses[i].y-100, 0);
+                Mat roi(mask, Rect(roiX,
+                                   roiY,
+                                   min(imgSize.width-roiX, 200),
+                                   min(imgSize.height-roiY, 200)));
                 roi = Scalar(255, 255, 255);
             }
 
@@ -157,7 +157,9 @@ extern "C" {
             retVal = true;
 
         } else {
+
             mask = Mat();
+
         }
        
         env->ReleaseByteArrayElements(frameData, yuv, 0);
