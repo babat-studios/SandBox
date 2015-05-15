@@ -41,6 +41,8 @@ public class MainGLRenderer implements GLSurfaceView.Renderer {
     public void onSurfaceCreated(GL10 unused, EGLConfig config) {
         GLES20.glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
         GLES20.glEnable(GLES20.GL_DEPTH_TEST);
+        GLES20.glEnable(GLES20.GL_CULL_FACE);
+        GLES20.glCullFace(GLES20.GL_BACK);
 
         int vertexShader = loadShader(GLES20.GL_VERTEX_SHADER, "world.vert");
         int fragmentShader = loadShader(GLES20.GL_FRAGMENT_SHADER, "world.frag");
@@ -72,15 +74,15 @@ public class MainGLRenderer implements GLSurfaceView.Renderer {
         mCamera.fov = 60;
         mCamera.aspect = 1;
 
-        mCube = new Mesh(this, mWorldShader);
+        mCube = new Mesh(mWorldShader);
 
-//        Timer timer = new Timer();
-//        timer.schedule(new TimerTask() {
-//            @Override
-//            public void run() {
-//                mCube.rotate(5);
-//            }
-//        }, 0, 50);
+        Timer timer = new Timer();
+        timer.schedule(new TimerTask() {
+            @Override
+            public void run() {
+                mCube.rotate(5);
+            }
+        }, 0, 50);
     }
 
     public void onDrawFrame(GL10 unused) {
@@ -92,6 +94,10 @@ public class MainGLRenderer implements GLSurfaceView.Renderer {
 
         mCamera.view(mView);
         mCamera.perspective(mProj);
+
+        GLES20.glEnable(GLES20.GL_TEXTURE_2D);
+        GLES20.glEnable(GLES20.GL_BLEND);
+        GLES20.glBlendFunc(GLES20.GL_ONE, GLES20.GL_SRC_COLOR);
 
         GLES20.glUseProgram(mWorldShader);
         drawScene();

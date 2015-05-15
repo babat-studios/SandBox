@@ -26,6 +26,7 @@ public class Utils {
     public static final int VERTICES_PER_FACE = 3;
     public static final int COORDS_PER_VERTEX = 3;
     public static final int COORDS_PER_NORMAL = 3;
+    public static final int COORDS_PER_UV = 2;
 
     public static FloatBuffer createFloatBuffer(float[] floatArray) {
         ByteBuffer bb = ByteBuffer.allocateDirect(floatArray.length * 4);

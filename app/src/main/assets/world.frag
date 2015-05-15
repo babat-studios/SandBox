@@ -11,9 +11,13 @@ uniform vec4 gDiffuseColor;
 uniform vec4 gSpecularColor;
 uniform float gShininess;
 
+/* Texture */
+uniform sampler2D gTexture;
+
 /* Interpolation data */
 varying vec4 point;
 varying vec4 normal;
+varying vec2 uv;
 
 void main (void)  
 {  
@@ -32,9 +36,9 @@ void main (void)
     float cosTheta = clamp(dot(N, L), 0, 1);
     float cosAlpha = dot(R, V);
 
-    vec4 ka = (gAmbientColor * gLightColor);
-    vec4 kd = (gDiffuseColor * gLightColor * cosTheta);
-    vec4 ks = (gSpecularColor * gLightColor * pow(cosAlpha, gShininess));
+    vec4 ka = clamp(gAmbientColor * gLightColor, 0, 1);
+    vec4 kd = clamp(gDiffuseColor * gLightColor * cosTheta, 0, 1);
+    vec4 ks = clamp(gSpecularColor * gLightColor * pow(cosAlpha, gShininess), 0, 1);
 
-    gl_FragColor = ka + kd + ks;;
+    gl_FragColor = clamp(ka + kd, 0, 1);
 }
