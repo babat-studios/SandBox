@@ -1,24 +1,11 @@
 package com.babat.sandbox;
 
 import org.opencv.android.Utils;
-import org.opencv.calib3d.Calib3d;
-import org.opencv.core.CvType;
 import org.opencv.core.Mat;
-import org.opencv.core.MatOfDMatch;
-import org.opencv.core.MatOfDouble;
-import org.opencv.core.MatOfFloat;
 import org.opencv.core.MatOfKeyPoint;
-import org.opencv.core.MatOfPoint3f;
-import org.opencv.core.MatOfPoint2f;
-import org.opencv.core.Point;
-import org.opencv.core.Point3;
-import org.opencv.core.Size;
-import org.opencv.features2d.DMatch;
+
 import org.opencv.features2d.DescriptorExtractor;
-import org.opencv.features2d.DescriptorMatcher;
 import org.opencv.features2d.FeatureDetector;
-import org.opencv.features2d.KeyPoint;
-import org.opencv.imgproc.Imgproc;
 
 import android.content.Context;
 import android.graphics.Bitmap;
@@ -27,13 +14,6 @@ import android.util.Log;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.lang.reflect.Constructor;
-import java.lang.reflect.Method;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
 
 
 public class SceneDetector implements CameraView.CameraViewListener {
@@ -42,9 +22,6 @@ public class SceneDetector implements CameraView.CameraViewListener {
 
     private static SceneDetector instance;
 
-    private MainActivity context;
-    private PositionDetector positionDetector;
-
     private CameraPositionListener cpListener;
 
     private boolean busy = false;
@@ -52,7 +29,6 @@ public class SceneDetector implements CameraView.CameraViewListener {
 
     private FeatureDetector detector;
     private DescriptorExtractor extractor;
-    private DescriptorMatcher matcher;
 
     private Mat crossMat = new Mat();
     private MatOfKeyPoint crossKeypoints = new MatOfKeyPoint();
@@ -71,14 +47,8 @@ public class SceneDetector implements CameraView.CameraViewListener {
 
     private SceneDetector(Context myContext)
     {
-        context = (MainActivity) myContext;
-
-        positionDetector = PositionDetector.getInstance(myContext);
-        positionDetector.enableDetector();
-
         detector = FeatureDetector.create(FeatureDetector.ORB);
         extractor = DescriptorExtractor.create(DescriptorExtractor.ORB);
-        matcher = DescriptorMatcher.create(DescriptorMatcher.BRUTEFORCE_HAMMINGLUT);
 
         try {
             InputStream crossIs = myContext.getAssets().open("crossCl.jpg");
@@ -105,13 +75,11 @@ public class SceneDetector implements CameraView.CameraViewListener {
 
     public void enableDetector()
     {
-        positionDetector.enableDetector();
     }
 
     public void disableDetector()
     {
         detected = false;
-        positionDetector.disableDetector();
     }
 
     public void addCameraPositionListener(CameraPositionListener cameraPositionListener)

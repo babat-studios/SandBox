@@ -2,13 +2,6 @@
 <items version="2" >
 
     <item
-        jar="/ssd/projects/babat/SandBox/app/build/intermediates/exploded-aar/com.android.support/support-v4/22.1.1/jars/classes.jar"
-        jumboMode="false"
-        revision="22.0.1"
-        sha1="c95ba8152923e4872e86a82cfcba9a51c0214328">
-        <dex dex="/ssd/projects/babat/SandBox/app/build/intermediates/pre-dexed/debug/classes-bbef2b22c61ae2b780aff87ad57e79972d1adb8e.jar" />
-    </item>
-    <item
         jar="/ssd/projects/babat/SandBox/app/build/intermediates/exploded-aar/com.android.support/support-v4/22.1.1/jars/libs/internal_impl-22.1.1.jar"
         jumboMode="false"
         revision="22.0.1"
@@ -23,18 +16,25 @@
         <dex dex="/ssd/projects/babat/SandBox/app/build/intermediates/pre-dexed/debug/support-annotations-22.1.1-50a452d5187bc51e1b2e50d9b7359d867911a296.jar" />
     </item>
     <item
-        jar="/ssd/projects/babat/SandBox/app/libs/commons-math3-3.5.jar"
+        jar="/ssd/projects/babat/SandBox/app/build/intermediates/exploded-aar/com.android.support/support-v4/22.1.1/jars/classes.jar"
         jumboMode="false"
         revision="22.0.1"
-        sha1="13af68e9a11576953f5c4b09436f8207be9d3a27">
-        <dex dex="/ssd/projects/babat/SandBox/app/build/intermediates/pre-dexed/debug/commons-math3-3.5-4308142cd6ceec6f4dfcbc48c15ad743d0f76c79.jar" />
+        sha1="c95ba8152923e4872e86a82cfcba9a51c0214328">
+        <dex dex="/ssd/projects/babat/SandBox/app/build/intermediates/pre-dexed/debug/classes-bbef2b22c61ae2b780aff87ad57e79972d1adb8e.jar" />
     </item>
     <item
         jar="/ssd/projects/babat/SandBox/app/build/intermediates/exploded-aar/SandBox/openCVLibrary2410/unspecified/jars/classes.jar"
         jumboMode="false"
         revision="22.0.1"
-        sha1="ab9f20725d3726c1efca4a137fe1bbd7e9d0f63b">
+        sha1="909bf876594ade50880b25737e8a16c6d945ab73">
         <dex dex="/ssd/projects/babat/SandBox/app/build/intermediates/pre-dexed/debug/classes-b42c3cc24fa4a044394216f222f43d1396b36eb2.jar" />
+    </item>
+    <item
+        jar="/ssd/projects/babat/SandBox/app/libs/commons-math3-3.5.jar"
+        jumboMode="false"
+        revision="22.0.1"
+        sha1="13af68e9a11576953f5c4b09436f8207be9d3a27">
+        <dex dex="/ssd/projects/babat/SandBox/app/build/intermediates/pre-dexed/debug/commons-math3-3.5-4308142cd6ceec6f4dfcbc48c15ad743d0f76c79.jar" />
     </item>
 
 </items>
