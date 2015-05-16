@@ -80,6 +80,50 @@ public class Mesh {
         mScale = new Vector3D(1, 1, 1);
 
         loadFromJsonFile("mesh/batman.json");
+        createVertexBuffers();
+    }
+
+    private void createVertexBuffers() {
+        for (GeometryObject geometry : mGeometries) {
+            int faceCount = geometry.faces.length / 3;
+
+            /*
+                Creating attribute buffers
+             */
+            float[] vertexArray = new float[faceCount * Utils.COORDS_PER_VERTEX];
+            float[] uvArray = new float[faceCount * Utils.COORDS_PER_UV];
+            float[] normalArray = new float[faceCount * Utils.COORDS_PER_NORMAL];
+
+            float[] zeroes = {0.0f, 0.0f, 0.0f, 0.0f};
+
+            for (int i = 0; i < geometry.faces.length; i += 3) {
+                int vertexNo = geometry.faces[i];
+                int uvNo = geometry.faces[i + 1];
+                int normalNo = geometry.faces[i + 2];
+
+                try {
+                    System.arraycopy(mVertices, vertexNo * Utils.COORDS_PER_VERTEX, vertexArray, (i / 3) * Utils.COORDS_PER_VERTEX, Utils.COORDS_PER_VERTEX);
+                } catch (ArrayIndexOutOfBoundsException e) {
+                    System.arraycopy(zeroes, 0, vertexArray, (i / 3) * Utils.COORDS_PER_VERTEX, Utils.COORDS_PER_VERTEX);
+                }
+
+                try {
+                    System.arraycopy(mUVs, uvNo * Utils.COORDS_PER_UV, uvArray, (i / 3) * Utils.COORDS_PER_UV, Utils.COORDS_PER_UV);
+                } catch (ArrayIndexOutOfBoundsException e) {
+                    System.arraycopy(zeroes, 0, uvArray, (i / 3) * Utils.COORDS_PER_UV, Utils.COORDS_PER_UV);
+                }
+
+                try {
+                    System.arraycopy(mNormals, normalNo * Utils.COORDS_PER_NORMAL, normalArray, (i / 3) * Utils.COORDS_PER_NORMAL, Utils.COORDS_PER_NORMAL);
+                } catch (ArrayIndexOutOfBoundsException e) {
+                    System.arraycopy(zeroes, 0, normalArray, (i / 3) * Utils.COORDS_PER_NORMAL, Utils.COORDS_PER_NORMAL);
+                }
+            }
+
+            geometry.vertexBuffer = Utils.createFloatBuffer(vertexArray);
+            geometry.uvBuffer = Utils.createFloatBuffer(uvArray);
+            geometry.normalBuffer = Utils.createFloatBuffer(normalArray);
+        }
     }
 
     private void loadFromJsonFile(String filename) {
@@ -220,50 +264,6 @@ public class Mesh {
          */
         for (GeometryObject geometry : mGeometries) {
             int faceCount = geometry.faces.length / 3;
-
-
-            if (geometry.vertexBuffer == null) {
-            /*
-                Creating attribute buffers
-             */
-                float[] vertexArray = new float[faceCount * Utils.COORDS_PER_VERTEX];
-                float[] uvArray = new float[faceCount * Utils.COORDS_PER_UV];
-                float[] normalArray = new float[faceCount * Utils.COORDS_PER_NORMAL];
-
-                float[] zeroes = {0.0f, 0.0f, 0.0f, 0.0f};
-
-                for (int i = 0; i < geometry.faces.length; i += 3) {
-                    int vertexNo = geometry.faces[i];
-                    int uvNo = geometry.faces[i + 1];
-                    int normalNo = geometry.faces[i + 2];
-
-                    try {
-                        System.arraycopy(mVertices, vertexNo * Utils.COORDS_PER_VERTEX, vertexArray, (i / 3) * Utils.COORDS_PER_VERTEX, Utils.COORDS_PER_VERTEX);
-                    } catch (ArrayIndexOutOfBoundsException e) {
-                        System.arraycopy(zeroes, 0, vertexArray, (i / 3) * Utils.COORDS_PER_VERTEX, Utils.COORDS_PER_VERTEX);
-                    }
-
-                    try {
-                        System.arraycopy(mUVs, uvNo * Utils.COORDS_PER_UV, uvArray, (i / 3) * Utils.COORDS_PER_UV, Utils.COORDS_PER_UV);
-                    } catch (ArrayIndexOutOfBoundsException e) {
-                        System.arraycopy(zeroes, 0, uvArray, (i / 3) * Utils.COORDS_PER_UV, Utils.COORDS_PER_UV);
-                    }
-
-                    try {
-                        System.arraycopy(mNormals, normalNo * Utils.COORDS_PER_NORMAL, normalArray, (i / 3) * Utils.COORDS_PER_NORMAL, Utils.COORDS_PER_NORMAL);
-                    } catch (ArrayIndexOutOfBoundsException e) {
-                        System.arraycopy(zeroes, 0, normalArray, (i / 3) * Utils.COORDS_PER_NORMAL, Utils.COORDS_PER_NORMAL);
-                    }
-                }
-
-                geometry.vertexBuffer = Utils.createFloatBuffer(vertexArray);
-                geometry.uvBuffer = Utils.createFloatBuffer(uvArray);
-                geometry.normalBuffer = Utils.createFloatBuffer(normalArray);
-            }
-            else if (geometry.uvBuffer == null || geometry.normalBuffer == null) {
-                Log.e(TAG, "Some buffers are empty but not all.");
-            }
-
 
             /*
                 Loading object specific shader variables
